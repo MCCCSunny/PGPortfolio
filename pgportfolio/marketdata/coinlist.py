@@ -9,17 +9,17 @@ import logging
 from pgportfolio.constants import *
 
 
-class CoinList(object):
+class CoinList(object): 
     def __init__(self, end, volume_average_days=1, volume_forward=0):
         self._polo = Poloniex()
         # connect the internet to accees volumes
-        vol = self._polo.marketVolume()
-        ticker = self._polo.marketTicker()
+        vol = self._polo.marketVolume() #24h成交量
+        ticker = self._polo.marketTicker() #tick行情
         pairs = []
         coins = []
         volumes = []
         prices = []
-
+        volumetest=[]
         logging.info("select coin online from %s to %s" % (datetime.fromtimestamp(end-(DAY*volume_average_days)-
                                                                                   volume_forward).
                                                            strftime('%Y-%m-%d %H:%M'),
@@ -37,9 +37,13 @@ class CoinList(object):
                             coins.append(c)
                             prices.append(float(ticker[k]['last']))
                     else:
+                        volumetest.append(c)
                         volumes.append(self.__get_total_volume(pair=k, global_end=end,
                                                                days=volume_average_days,
-                                                               forward=volume_forward))
+                                                               forward=volume_forward))    
+        print ('volumetest',volumetest)     
+        print ('volume_average_days',volume_average_days)
+        print ('volume_forward',volume_forward)             
         self._df = pd.DataFrame({'coin': coins, 'pair': pairs, 'volume': volumes, 'price':prices})
         self._df = self._df.set_index('coin')
 

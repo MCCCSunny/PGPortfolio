@@ -29,8 +29,8 @@ class Poloniex:
         self.str_timestamp = lambda datestr=self.timestamp_str(), format="%Y-%m-%d %H:%M:%S": int(time.mktime(time.strptime(datestr, format)))
         self.float_roundPercent = lambda floatN, decimalP=2: str(round(float(floatN) * 100, decimalP))+"%"
 
-        # PUBLIC COMMANDS
-        self.marketTicker = lambda x=0: self.api('returnTicker')
+        # PUBLIC COMMANDS 
+        self.marketTicker = lambda x=0: self.api('returnTicker') #tick行情价格
         self.marketVolume = lambda x=0: self.api('return24hVolume')
         self.marketStatus = lambda x=0: self.api('returnCurrencies')
         self.marketLoans = lambda coin: self.api('returnLoanOrders',{'currency':coin})

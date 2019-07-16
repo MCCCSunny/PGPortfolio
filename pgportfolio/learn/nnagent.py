@@ -13,18 +13,18 @@ class NNAgent:
                                  self.__coin_number,
                                  config["input"]["window_size"],
                                  config["layers"],
-                                 device=device)
+                                 device=device) #define a network
         self.__global_step = tf.Variable(0, trainable=False)
         self.__train_operation = None
         self.__y = tf.placeholder(tf.float32, shape=[None,
                                                      self.__config["input"]["feature_number"],
                                                      self.__coin_number])
         self.__future_price = tf.concat([tf.ones([self.__net.input_num, 1]),
-                                       self.__y[:, 0, :]], 1)
+                                       self.__y[:, 0, :]], 1) # concat many 1 in the title
         self.__future_omega = (self.__future_price * self.__net.output) /\
                               tf.reduce_sum(self.__future_price * self.__net.output, axis=1)[:, None]
         # tf.assert_equal(tf.reduce_sum(self.__future_omega, axis=1), tf.constant(1.0))
-        self.__commission_ratio = self.__config["trading"]["trading_consumption"]
+        self.__commission_ratio = self.__config["trading"]["trading_consumption"] 
         self.__pv_vector = tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1]) *\
                            (tf.concat([tf.ones(1), self.__pure_pc()], axis=0))
         self.__log_mean_free = tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_price,
@@ -39,6 +39,7 @@ class NNAgent:
                                                  decay_steps=self.__config["training"]["decay_steps"],
                                                  decay_rate=self.__config["training"]["decay_rate"],
                                                  training_method=self.__config["training"]["training_method"])
+        # define a optimizer
         self.__saver = tf.train.Saver()
         if restore_dir:
             self.__saver.restore(self.__net.session, restore_dir)
@@ -146,7 +147,7 @@ class NNAgent:
         return train_step
 
     def train(self, x, y, last_w, setw):
-        tflearn.is_training(True, self.__net.session)
+        tflearn.is_training(True, self.__net.session) #set ops as training mode
         self.evaluate_tensors(x, y, last_w, setw, [self.__train_operation])
 
     def evaluate_tensors(self, x, y, last_w, setw, tensors):

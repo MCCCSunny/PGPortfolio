@@ -183,20 +183,20 @@ class TraderTrainer:
         total_training_time = 0
         for i in range(self.train_config["steps"]):
             step_start = time.time()
-            x, y, last_w, setw = self.next_batch()
+            x, y, last_w, setw = self.next_batch() # last_w: last PVM  setW: PVM
             finish_data = time.time()
-            total_data_time += (finish_data - step_start)
+            total_data_time += (finish_data - step_start) #record all elasped time
             self._agent.train(x, y, last_w=last_w, setw=setw)
-            total_training_time += time.time() - finish_data
+            total_training_time += time.time() - finish_data #record the training used time
             if i % 1000 == 0 and log_file_dir:
                 logging.info("average time for data accessing is %s"%(total_data_time/1000))
                 logging.info("average time for training is %s"%(total_training_time/1000))
                 total_training_time = 0
                 total_data_time = 0
-                self.log_between_steps(i)
+                self.log_between_steps(i) # record the log
 
         if self.save_path:
-            self._agent.recycle()
+            self._agent.recycle() #reset default session
             best_agent = NNAgent(self.config, restore_dir=self.save_path)
             self._agent = best_agent
 

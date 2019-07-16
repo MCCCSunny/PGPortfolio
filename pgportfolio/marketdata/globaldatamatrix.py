@@ -60,7 +60,7 @@ class HistoryManager:
         self.__coins = coins
         for coin in coins:
             self.update_data(start, end, coin)
-
+        print (coins)
         if len(coins)!=self._coin_number:
             raise ValueError("the length of selected coins %d is not equal to expected %d"
                              % (len(coins), self._coin_number))

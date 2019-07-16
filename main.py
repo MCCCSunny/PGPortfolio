@@ -70,15 +70,15 @@ def main():
         end = time.mktime(datetime.strptime(config["input"]["end_date"], "%Y/%m/%d").timetuple())
         DataMatrices(start=start,
                      end=end,
-                     feature_number=config["input"]["feature_number"],
-                     window_size=config["input"]["window_size"],
+                     feature_number=config["input"]["feature_number"], # 3
+                     window_size=config["input"]["window_size"], # 31
                      online=True,
-                     period=config["input"]["global_period"],
-                     volume_average_days=config["input"]["volume_average_days"],
-                     coin_filter=config["input"]["coin_number"],
-                     is_permed=config["input"]["is_permed"],
-                     test_portion=config["input"]["test_portion"],
-                     portion_reversed=config["input"]["portion_reversed"])
+                     period=config["input"]["global_period"], # 1800
+                     volume_average_days=config["input"]["volume_average_days"], # 30
+                     coin_filter=config["input"]["coin_number"], # 11
+                     is_permed=config["input"]["is_permed"], # false
+                     test_portion=config["input"]["test_portion"], # 
+                     portion_reversed=config["input"]["portion_reversed"]) #false
     elif options.mode == "backtest":
         config = _config_by_algo(options.algo)
         _set_logging_by_algo(logging.DEBUG, logging.DEBUG, options.algo, "backtestlog")

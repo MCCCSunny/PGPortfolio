@@ -40,14 +40,14 @@ class DataMatrices:
         type_list = get_type_list(feature_number)
         self.__features = type_list
         self.feature_number = feature_number
-        volume_forward = get_volume_forward(self.__end-start, test_portion, portion_reversed)
-        self.__history_manager = gdm.HistoryManager(coin_number=coin_filter, end=self.__end,
-                                                    volume_average_days=volume_average_days,
+        volume_forward = get_volume_forward(self.__end-start, test_portion, portion_reversed) # 
+        self.__history_manager = gdm.HistoryManager(coin_number=coin_filter, end=self.__end, # 11
+                                                    volume_average_days=volume_average_days, # 30
                                                     volume_forward=volume_forward, online=online)
         if market == "poloniex":
             self.__global_data = self.__history_manager.get_global_panel(start,
                                                                          self.__end,
-                                                                         period=period,
+                                                                         period=period, #1800
                                                                          features=type_list)
         else:
             raise ValueError("market {} is not valid".format(market))

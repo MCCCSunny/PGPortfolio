@@ -84,7 +84,8 @@ class CNN(NeuralNetWork):
                 width = network.get_shape()[2]
                 network = tflearn.layers.conv_2d(network, 1, [1, width], padding="valid",
                                                  regularizer=layer["regularizer"],
-                                                 weight_decay=layer["weight_decay"])
+                                                 weight_decay=layer["weight_decay"]) 
+                                                 # batch, new height, new width, nb_filter
                 self.add_layer_to_dict(layer["type"], network)
                 network = network[:, :, 0, 0]
                 btc_bias = tf.ones((self.input_num, 1))
