@@ -1,7 +1,7 @@
 from __future__ import division,absolute_import,print_function
 import numpy as np
 import pandas as pd
-
+import pdb
 
 def pricenorm3d(m, features, norm_method, fake_ratio=1.0, with_y=True):
     """normalize the price tensor, whose shape is [features, coins, windowsize]

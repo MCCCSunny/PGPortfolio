@@ -8,7 +8,7 @@ import logging
 from pgportfolio.tools.configprocess import parse_time
 from pgportfolio.tools.data import get_volume_forward, get_type_list
 import pgportfolio.marketdata.replaybuffer as rb
-
+import pdb
 MIN_NUM_PERIOD = 3
 
 
@@ -44,11 +44,13 @@ class DataMatrices:
         self.__history_manager = gdm.HistoryManager(coin_number=coin_filter, end=self.__end,
                                                     volume_average_days=volume_average_days,
                                                     volume_forward=volume_forward, online=online)
+       
         if market == "poloniex":
             self.__global_data = self.__history_manager.get_global_panel(start,
                                                                          self.__end,
                                                                          period=period,
                                                                          features=type_list)
+            print (self.__global_data) 
         else:
             raise ValueError("market {} is not valid".format(market))
         self.__period_length = period

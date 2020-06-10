@@ -10,7 +10,7 @@ from pgportfolio.constants import *
 import sqlite3
 from datetime import datetime
 import logging
-
+import pdb
 
 class HistoryManager:
     # if offline ,the coin_list could be None
@@ -195,6 +195,8 @@ class HistoryManager:
             period=self.__storage_period)
         logging.info("fill %s data from %s to %s"%(coin, datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M'),
                                             datetime.fromtimestamp(end).strftime('%Y-%m-%d %H:%M')))
+        print (datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M'))
+        print (datetime.fromtimestamp(end).strftime('%Y-%m-%d %H:%M'))
         for c in chart:
             if c["date"] > 0:
                 if c['weightedAverage'] == 0:

@@ -7,7 +7,7 @@ import pandas as pd
 from datetime import datetime
 import logging
 from pgportfolio.constants import *
-
+import pdb
 
 class CoinList(object):
     def __init__(self, end, volume_average_days=1, volume_forward=0):
