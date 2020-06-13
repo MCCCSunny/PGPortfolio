@@ -18,10 +18,13 @@ class CRP(TDAgent):
         self.b = b
 
     def decide_by_history(self, x, last_b):
-        x = self.get_last_rpv(x)
+        '''
+        last_b: last weight 
+        '''
+        x = self.get_last_rpv(x) # last relative price vector
 
         # init b to default if necessary
         if self.b is None:
-            self.b = np.ones(len(x)) / len(x)
+            self.b = np.ones(len(x)) / len(x) #等权重
         return self.b
 

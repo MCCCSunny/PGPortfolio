@@ -48,7 +48,7 @@ Under the `nntrader/nntrader` directory, there is a json file called `net_config
         * if it is online, new data that dose not exist in the database would be saved
 
 ## Training and Tuning the hyper-parameters
-1. First, modify the `nntrader/nntrader/net_config.json` file.
+1. First, modify the `PGPortfolio/pgportfolio/net_config.json` file.
 2. make sure current directory is under `nntrader` and type `python main.py --mode=generate --repeat=1`
     * this will make 1 subfolders under the `train_package`
     * in each subfolder, there is a copy of the `net_config.json`

@@ -11,7 +11,7 @@ from pgportfolio.tools.configprocess import load_config
 from pgportfolio.tools.trade import save_test_data
 from pgportfolio.tools.shortcut import execute_backtest
 from pgportfolio.resultprocess import plot
-
+import pdb
 
 def build_parser():
     parser = ArgumentParser()
@@ -50,13 +50,14 @@ def main():
     if not os.path.exists("./" + "database"):
         os.makedirs("./" + "database")
 
-    if options.mode == "train":
+    if options.mode == "train": #训练数据
         import pgportfolio.autotrain.training
         if not options.algo:
-            pgportfolio.autotrain.training.train_all(int(options.processes), options.device)
+            pgportfolio.autotrain.training.train_all(int(options.processes), options.device) #训练智能体
         else:
             for folder in options.folder:
                 raise NotImplementedError()
+    # 生成配置文件到路径中，要想修改配置，直接修改PGPortfolio\pgportfolio\net_config.json
     elif options.mode == "generate":
         import pgportfolio.autotrain.generate as generate
         logging.basicConfig(level=logging.INFO)

@@ -31,7 +31,8 @@ class TDAgent(object):
         raise NotImplementedError('subclass must implement this!')
 
     def get_last_rpv(self, x):
-        '''remove dimension of input. Return last relative price vector.
+        '''
+        remove dimension of input. Return last relative price vector.
         :param x: matrix with shape (1, window_size, coin_number+1)
         '''
         if x.ndim == 3:

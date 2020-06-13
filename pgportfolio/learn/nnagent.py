@@ -8,42 +8,40 @@ import pgportfolio.learn.network as network
 class NNAgent:
     def __init__(self, config, restore_dir=None, device="cpu"):
         self.__config = config
-        self.__coin_number = config["input"]["coin_number"]
+        self.__coin_number = config["input"]["coin_number"] #币种的个数
         self.__net = network.CNN(config["input"]["feature_number"],
                                  self.__coin_number,
                                  config["input"]["window_size"],
                                  config["layers"],
-                                 device=device)
+                                 device=device) #定义CNN网络
         self.__global_step = tf.Variable(0, trainable=False)
         self.__train_operation = None
-        self.__y = tf.placeholder(tf.float32, shape=[None,
-                                                     self.__config["input"]["feature_number"],
-                                                     self.__coin_number])
-        self.__future_price = tf.concat([tf.ones([self.__net.input_num, 1]),
-                                       self.__y[:, 0, :]], 1)
+        self.__y = tf.placeholder(tf.float32, shape=[None, self.__config["input"]["feature_number"], self.__coin_number]) 
+        #__y: (None, 3, 11)
+        self.__future_price = tf.concat([tf.ones([self.__net.input_num, 1]), self.__y[:, 0, :]], 1)
         self.__future_omega = (self.__future_price * self.__net.output) /\
                               tf.reduce_sum(self.__future_price * self.__net.output, axis=1)[:, None]
         # tf.assert_equal(tf.reduce_sum(self.__future_omega, axis=1), tf.constant(1.0))
-        self.__commission_ratio = self.__config["trading"]["trading_consumption"]
+        self.__commission_ratio = self.__config["trading"]["trading_consumption"] #交易手续费的设定
         self.__pv_vector = tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1]) *\
                            (tf.concat([tf.ones(1), self.__pure_pc()], axis=0))
-        self.__log_mean_free = tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_price,
-                                                                   reduction_indices=[1])))
-        self.__portfolio_value = tf.reduce_prod(self.__pv_vector)
+        self.__log_mean_free = tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1])))
+        self.__portfolio_value = tf.reduce_prod(self.__pv_vector) #张量元素的乘积
         self.__mean = tf.reduce_mean(self.__pv_vector)
         self.__log_mean = tf.reduce_mean(tf.log(self.__pv_vector))
         self.__standard_deviation = tf.sqrt(tf.reduce_mean((self.__pv_vector - self.__mean) ** 2))
         self.__sharp_ratio = (self.__mean - 1) / self.__standard_deviation
-        self.__loss = self.__set_loss_function()
+        self.__loss = self.__set_loss_function() #定义损失函数
         self.__train_operation = self.init_train(learning_rate=self.__config["training"]["learning_rate"],
                                                  decay_steps=self.__config["training"]["decay_steps"],
                                                  decay_rate=self.__config["training"]["decay_rate"],
                                                  training_method=self.__config["training"]["training_method"])
+        # 初始化训练器
         self.__saver = tf.train.Saver()
         if restore_dir:
             self.__saver.restore(self.__net.session, restore_dir)
         else:
-            self.__net.session.run(tf.global_variables_initializer())
+            self.__net.session.run(tf.global_variables_initializer()) #初始化变量
 
     @property
     def session(self):
@@ -130,6 +128,9 @@ class NNAgent:
         return loss_tensor
 
     def init_train(self, learning_rate, decay_steps, decay_rate, training_method):
+        '''
+        初始化训练器
+        '''
         learning_rate = tf.train.exponential_decay(learning_rate, self.__global_step,
                                                    decay_steps, decay_rate, staircase=True)
         if training_method == 'GradientDescent':

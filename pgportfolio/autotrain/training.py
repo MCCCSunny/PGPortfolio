@@ -8,7 +8,7 @@ import time
 from multiprocessing import Process
 from pgportfolio.learn.tradertrainer import TraderTrainer
 from pgportfolio.tools.configprocess import load_config
-
+import pdb
 
 def train_one(save_path, config, log_file_dir, index, logfile_level, console_level, device):
     """
@@ -29,8 +29,11 @@ def train_one(save_path, config, log_file_dir, index, logfile_level, console_lev
         console = logging.StreamHandler()
         console.setLevel(console_level)
         logging.getLogger().addHandler(console)
+    else:    
+        print ('log_file_dir is not existent')
     print("training at %s started" % index)
-    return TraderTrainer(config, save_path=save_path, device=device).train_net(log_file_dir=log_file_dir, index=index)
+    trainer = TraderTrainer(config, save_path=save_path, device=device) #初始化训练器
+    return trainer.train_net(log_file_dir=log_file_dir, index=index) #训练网络
 
 def train_all(processes=1, device="cpu"):
     """
@@ -54,15 +57,17 @@ def train_all(processes=1, device="cpu"):
     pool = []
     for dir in all_subdir:
         # train only if the log dir does not exist
-        if not str.isdigit(dir):
+        if not str.isdigit(dir): #判断是不是文件路径
             return
         # NOTE: logfile is for compatibility reason
+        # tensorboard 不存在 或者 logfile存在时，进行训练
         if not (os.path.isdir("./"+train_dir+"/"+dir+"/tensorboard") or os.path.isdir("./"+train_dir+"/"+dir+"/logfile")):
+            # 开始训练
             p = Process(target=train_one, args=(
                 "./" + train_dir + "/" + dir + "/netfile",
                 load_config(dir),
                 "./" + train_dir + "/" + dir + "/tensorboard",
-                dir, logfile_level, console_level, device))
+                dir, logfile_level, console_level, device)) #训练每一个模型 TraderTrainer
             p.start()
             pool.append(p)
         else:

@@ -44,7 +44,7 @@ class CNN(NeuralNetWork):
     def _build_network(self, layers):
         network = tf.transpose(self.input_tensor, [0, 2, 3, 1])
         # [batch, assets, window, features]
-        network = network / network[:, :, -1, 0, None, None]
+        network = network / network[:, :, -1, 0, None, None] #用最近一个时刻的价格数据进行正则化
         for layer_number, layer in enumerate(layers):
             if layer["type"] == "DenseLayer":
                 network = tflearn.layers.core.fully_connected(network,

@@ -22,11 +22,11 @@ def preprocess_config(config):
 
 
 def fill_default(config):
-    set_missing(config, "random_seed", 0)
-    set_missing(config, "agent_type", "NNAgent")
-    fill_layers_default(config["layers"])
-    fill_input_default(config["input"])
-    fill_train_config(config["training"])
+    set_missing(config, "random_seed", 0)  #填充参数值
+    set_missing(config, "agent_type", "NNAgent") 
+    fill_layers_default(config["layers"]) #填充网络的默认参数
+    fill_input_default(config["input"])  #填充输入的参数
+    fill_train_config(config["training"]) #填充训练参数
 
 
 def fill_train_config(train_config):
@@ -36,7 +36,8 @@ def fill_train_config(train_config):
 
 
 def fill_input_default(input_config):
-    set_missing(input_config, "save_memory_mode", False)
+    # 填充参数值
+    set_missing(input_config, "save_memory_mode", False) 
     set_missing(input_config, "portion_reversed", False)
     set_missing(input_config, "market", "poloniex")
     set_missing(input_config, "norm_method", "absolute")
@@ -99,6 +100,7 @@ def load_config(index=None):
     @:param index: if None, load the default in pgportfolio;
      if a integer, load the config under train_package
     """
+    # 读取配置文件
     if index:
         with open(rootpath+"/train_package/" + str(index) + "/net_config.json") as file:
             config = json.load(file)

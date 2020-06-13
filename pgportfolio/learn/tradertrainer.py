@@ -14,6 +14,7 @@ import tensorflow as tf
 from pgportfolio.learn.nnagent import NNAgent
 from pgportfolio.marketdata.datamatrices import DataMatrices
 import logging
+import pdb
 Result = collections.namedtuple("Result",
                                 [
                                  "test_pv",
@@ -51,12 +52,11 @@ class TraderTrainer:
         self.__batch_size = self.train_config["batch_size"]
         self.__snap_shot = self.train_config["snap_shot"]
         config["input"]["fake_data"] = fake_data
-
-        self._matrix = DataMatrices.create_from_config(config)
-
-        self.test_set = self._matrix.get_test_set()
+        
+        self._matrix = DataMatrices.create_from_config(config) #数据 
+        self.test_set = self._matrix.get_test_set() #测试集
         if not config["training"]["fast_train"]:
-            self.training_set = self._matrix.get_training_set()
+            self.training_set = self._matrix.get_training_set() #训练集
         self.upperbound_validation = 1
         self.upperbound_test = 1
         tf.set_random_seed(self.config["random_seed"])
@@ -84,7 +84,7 @@ class TraderTrainer:
 
     @staticmethod
     def calculate_upperbound(y):
-        array = np.maximum.reduce(y[:, 0, :], 1)
+        array = np.maximum.reduce(y[:, 0, :], 1) #第1维的最大值
         total = 1.0
         for i in array:
             total = total * i
@@ -157,11 +157,11 @@ class TraderTrainer:
         location = log_file_dir
         self.network_writer = tf.summary.FileWriter(location + '/network',
                                                     self._agent.session.graph)
-        self.test_writer = tf.summary.FileWriter(location + '/test')
+        self.test_writer = tf.summary.FileWriter(location + '/test') #保存的是训练结果
         self.train_writer = tf.summary.FileWriter(location + '/train')
 
     def __print_upperbound(self):
-        upperbound_test = self.calculate_upperbound(self.test_set["y"])
+        upperbound_test = self.calculate_upperbound(self.test_set["y"]) #都乘起来
         logging.info("upper bound in test is %s" % upperbound_test)
 
     def train_net(self, log_file_dir="./tensorboard", index="0"):
@@ -174,35 +174,36 @@ class TraderTrainer:
         if log_file_dir:
             if self.device == "cpu":
                 with tf.device("/cpu:0"):
-                    self.__init_tensor_board(log_file_dir)
+                    self.__init_tensor_board(log_file_dir)  #初始化summary
             else:
                 self.__init_tensor_board(log_file_dir)
         starttime = time.time()
 
         total_data_time = 0
         total_training_time = 0
-        for i in range(self.train_config["steps"]):
+        for i in range(self.train_config["steps"]): #训练步数
             step_start = time.time()
-            x, y, last_w, setw = self.next_batch()
+            x, y, last_w, setw = self.next_batch() #获取batch
             finish_data = time.time()
             total_data_time += (finish_data - step_start)
-            self._agent.train(x, y, last_w=last_w, setw=setw)
+            self._agent.train(x, y, last_w=last_w, setw=setw) #训练智能体
             total_training_time += time.time() - finish_data
-            if i % 1000 == 0 and log_file_dir:
-                logging.info("average time for data accessing is %s"%(total_data_time/1000))
-                logging.info("average time for training is %s"%(total_training_time/1000))
+            if i % 50 == 0 and log_file_dir:
+                logging.info("average time for data accessing is %s"%(total_data_time/50))
+                logging.info("average time for training is %s"%(total_training_time/50))
                 total_training_time = 0
                 total_data_time = 0
-                self.log_between_steps(i)
+                self.log_between_steps(i) #每隔固定的步数对测试集进行评估
 
         if self.save_path:
-            self._agent.recycle()
+            self._agent.recycle() #
             best_agent = NNAgent(self.config, restore_dir=self.save_path)
             self._agent = best_agent
 
-        pv, log_mean = self._evaluate("test", self._agent.portfolio_value, self._agent.log_mean)
-        logging.warning('the portfolio value train No.%s is %s log_mean is %s,'
-                        ' the training time is %d seconds' % (index, pv, log_mean, time.time() - starttime))
+        pv, log_mean = self._evaluate("test", self._agent.portfolio_value, self._agent.log_mean) #最后在评估一下
+        pdb.set_trace()
+        #logging.warning('the portfolio value train No.%s is %s log_mean is %s,'
+        #                ' the training time is %d seconds' % (index, pv, log_mean, time.time() - starttime))
 
         return self.__log_result_csv(index, time.time() - starttime)
 
@@ -211,12 +212,9 @@ class TraderTrainer:
         dataframe = None
         csv_dir = './train_package/train_summary.csv'
         tflearn.is_training(False, self._agent.session)
-        v_pv, v_log_mean, benefit_array, v_log_mean_free =\
-            self._evaluate("test",
-                           self._agent.portfolio_value,
-                           self._agent.log_mean,
-                           self._agent.pv_vector,
-                           self._agent.log_mean_free)
+        v_pv, v_log_mean, benefit_array, v_log_mean_free = self._evaluate("test", self._agent.portfolio_value,\
+                                                           self._agent.log_mean, self._agent.pv_vector,\
+                                                           self._agent.log_mean_free)
 
         backtest = backtest.BackTest(self.config.copy(),
                                      net_dir=None,
