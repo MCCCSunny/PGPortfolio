@@ -45,22 +45,26 @@ class DataMatrices:
                                                     volume_average_days=volume_average_days,
                                                     volume_forward=volume_forward, online=online)
        
-        if market == "poloniex":
+        if market == "poloniex": #P网
             self.__global_data = self.__history_manager.get_global_panel(start,
                                                                          self.__end,
                                                                          period=period,
                                                                          features=type_list)
-            print (self.__global_data) 
+
+            # 数据
+            print (self.__global_data) #  dimension: 3(items)*11(major_axis)*2833(minor_axis)
         else:
             raise ValueError("market {} is not valid".format(market))
-        self.__period_length = period
+        self.__period_length = period #周期长度 30min bar
         # portfolio vector memory, [time, assets]
         self.__PVM = pd.DataFrame(index=self.__global_data.minor_axis,
-                                  columns=self.__global_data.major_axis)
-        self.__PVM = self.__PVM.fillna(1.0 / self.__coin_no)
-
-        self._window_size = window_size
+                                  columns=self.__global_data.major_axis) #(2833, 11)
+        #print ('=============================>',self.__PVM.shape)
+        #print (self.__PVM.iloc[0,:])
+        self.__PVM = self.__PVM.fillna(1.0 / self.__coin_no) #初始化权重信息，权重都是相等的
+        self._window_size = window_size #窗口大小 31
         self._num_periods = len(self.__global_data.minor_axis)
+        #print (self._num_periods) #数据个数
         self.__divide_data(test_portion, portion_reversed)
 
         self._portion_reversed = portion_reversed

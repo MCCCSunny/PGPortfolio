@@ -4,7 +4,7 @@ from pgportfolio.trade import trader
 from pgportfolio.marketdata.datamatrices import DataMatrices
 import logging
 from pgportfolio.tools.trade import calculate_pv_after_commission
-
+import pdb
 
 class BackTest(trader.Trader):
     def __init__(self, config, net_dir=None, agent=None, agent_type="nn"):
@@ -18,11 +18,11 @@ class BackTest(trader.Trader):
         else:
             raise ValueError()
         self.__test_set = data_matrices.get_test_set()
-        self.__test_length = self.__test_set["X"].shape[0]
+        self.__test_length = self.__test_set["X"].shape[0] #测试集的长度
         self._total_steps = self.__test_length
         self.__test_pv = 1.0
         self.__test_pc_vector = []
-
+        
     @property
     def test_pv(self):
         return self.__test_pv
@@ -68,6 +68,9 @@ class BackTest(trader.Trader):
         return inputs
 
     def trade_by_strategy(self, omega):
+        '''
+        omega: 测试集上网络的输出
+        '''
         logging.info("the step is {}".format(self._steps))
         logging.debug("the raw omega is {}".format(omega))
         future_price = np.concatenate((np.ones(1), self.__get_matrix_y()))
@@ -79,4 +82,3 @@ class BackTest(trader.Trader):
                            portfolio_change
         logging.debug("the portfolio change this period is : {}".format(portfolio_change))
         self.__test_pc_vector.append(portfolio_change)
-

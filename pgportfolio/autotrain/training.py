@@ -63,6 +63,9 @@ def train_all(processes=1, device="cpu"):
         # tensorboard 不存在 或者 logfile存在时，进行训练
         if not (os.path.isdir("./"+train_dir+"/"+dir+"/tensorboard") or os.path.isdir("./"+train_dir+"/"+dir+"/logfile")):
             # 开始训练
+            train_one("./" + train_dir + "/" + dir + "/netfile", load_config(dir),
+                      "./" + train_dir + "/" + dir + "/tensorboard",dir, logfile_level, console_level, device)
+            '''
             p = Process(target=train_one, args=(
                 "./" + train_dir + "/" + dir + "/netfile",
                 load_config(dir),
@@ -70,10 +73,12 @@ def train_all(processes=1, device="cpu"):
                 dir, logfile_level, console_level, device)) #训练每一个模型 TraderTrainer
             p.start()
             pool.append(p)
+            '''
         else:
             continue
 
         # suspend if the processes are too many
+        '''
         wait = True
         while wait:
             time.sleep(5)
@@ -83,4 +88,5 @@ def train_all(processes=1, device="cpu"):
                     pool.remove(p)
             if len(pool)<processes:
                 wait = False
+      '''
     print("All the Tasks are Over")

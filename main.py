@@ -28,6 +28,7 @@ def build_parser():
     parser.add_argument("--algo",
                         help="algo name or indexes of training_package ",
                         dest="algo")
+                        #default='4')
     parser.add_argument("--algos",
                         help="algo names or indexes of training_package, seperated by \",\"",
                         dest="algos")
@@ -49,7 +50,8 @@ def main():
         os.makedirs("./" + "train_package")
     if not os.path.exists("./" + "database"):
         os.makedirs("./" + "database")
-
+    options.mode = 'train'
+    options.folder = '5'
     if options.mode == "train": #训练数据
         import pgportfolio.autotrain.training
         if not options.algo:
@@ -81,12 +83,12 @@ def main():
                      test_portion=config["input"]["test_portion"],
                      portion_reversed=config["input"]["portion_reversed"])
     elif options.mode == "backtest":
-        config = _config_by_algo(options.algo)
-        _set_logging_by_algo(logging.DEBUG, logging.DEBUG, options.algo, "backtestlog")
-        execute_backtest(options.algo, config)
+        config = _config_by_algo(options.algo) #读取配置文件
+        _set_logging_by_algo(logging.DEBUG, logging.DEBUG, options.algo, "backtestlog") #设置log的路径
+        values = execute_backtest(options.algo, config) #执行回测的步数为训练集的长度
     elif options.mode == "save_test_data":
         # This is used to export the test data
-        save_test_data(load_config(options.folder))
+        save_test_data(load_config(options.folder)) #保存测试集数据
     elif options.mode == "plot":
         logging.basicConfig(level=logging.INFO)
         algos = options.algos.split(",")

@@ -114,7 +114,7 @@ class Trader:
                 while self._steps < self._total_steps:
                     sleeptime = self.__trade_body()
                     time.sleep(sleeptime)
-            else:
+            else:#回测
                 while self._steps < self._total_steps:
                     self.__trade_body()
         finally:

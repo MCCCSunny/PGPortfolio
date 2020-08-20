@@ -54,9 +54,10 @@ class TraderTrainer:
         config["input"]["fake_data"] = fake_data
         
         self._matrix = DataMatrices.create_from_config(config) #数据 
-        self.test_set = self._matrix.get_test_set() #测试集
+        self.test_set = self._matrix.get_test_set() #测试集 dict：{'X', 'y', 'last_w', 'setw'}
         if not config["training"]["fast_train"]:
             self.training_set = self._matrix.get_training_set() #训练集
+            pdb.set_trace()
         self.upperbound_validation = 1
         self.upperbound_test = 1
         tf.set_random_seed(self.config["random_seed"])
@@ -183,7 +184,7 @@ class TraderTrainer:
         total_training_time = 0
         for i in range(self.train_config["steps"]): #训练步数
             step_start = time.time()
-            x, y, last_w, setw = self.next_batch() #获取batch
+            x, y, last_w, setw = self.next_batch() #获取batch x:(109, 3, 11, 31) y:(109, 3, 11) last_w: (109,11) setw:function
             finish_data = time.time()
             total_data_time += (finish_data - step_start)
             self._agent.train(x, y, last_w=last_w, setw=setw) #训练智能体
@@ -201,7 +202,6 @@ class TraderTrainer:
             self._agent = best_agent
 
         pv, log_mean = self._evaluate("test", self._agent.portfolio_value, self._agent.log_mean) #最后在评估一下
-        pdb.set_trace()
         #logging.warning('the portfolio value train No.%s is %s log_mean is %s,'
         #                ' the training time is %d seconds' % (index, pv, log_mean, time.time() - starttime))
 

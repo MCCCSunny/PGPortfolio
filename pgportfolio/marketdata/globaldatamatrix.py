@@ -52,12 +52,13 @@ class HistoryManager:
         :param period: time interval of each data access point
         :param features: tuple or list of the feature names
         :return a panel, [feature, coin, time]
+        获取数据
         """
         start = int(start - (start%period))
         end = int(end - (end%period))
         coins = self.select_coins(start=end - self.__volume_forward - self.__volume_average_days * DAY,
                                   end=end-self.__volume_forward)
-        self.__coins = coins
+        self.__coins = coins #选择货币
         for coin in coins:
             self.update_data(start, end, coin)
 
@@ -66,63 +67,66 @@ class HistoryManager:
                              % (len(coins), self._coin_number))
 
         logging.info("feature type list is %s" % str(features))
-        self.__checkperiod(period)
+        self.__checkperiod(period) #检查周期，必须是固定的时间周期
 
         time_index = pd.to_datetime(list(range(start, end+1, period)),unit='s')
-        panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32)
+        panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32) #获取的数据        
 
         connection = sqlite3.connect(DATABASE_DIR)
-        try:
-            for row_number, coin in enumerate(coins):
-                for feature in features:
-                    # NOTE: transform the start date to end date
-                    if feature == "close":
-                        sql = ("SELECT date+300 AS date_norm, close FROM History WHERE"
-                               " date_norm>={start} and date_norm<={end}" 
-                               " and date_norm%{period}=0 and coin=\"{coin}\"".format(
-                               start=start, end=end, period=period, coin=coin))
-                    elif feature == "open":
-                        sql = ("SELECT date+{period} AS date_norm, open FROM History WHERE"
-                               " date_norm>={start} and date_norm<={end}" 
-                               " and date_norm%{period}=0 and coin=\"{coin}\"".format(
-                               start=start, end=end, period=period, coin=coin))
-                    elif feature == "volume":
-                        sql = ("SELECT date_norm, SUM(volume)"+
-                               " FROM (SELECT date+{period}-(date%{period}) "
-                               "AS date_norm, volume, coin FROM History)"
-                               " WHERE date_norm>={start} and date_norm<={end} and coin=\"{coin}\""
-                               " GROUP BY date_norm".format(
-                                    period=period,start=start,end=end,coin=coin))
-                    elif feature == "high":
-                        sql = ("SELECT date_norm, MAX(high)" +
-                               " FROM (SELECT date+{period}-(date%{period})"
-                               " AS date_norm, high, coin FROM History)"
-                               " WHERE date_norm>={start} and date_norm<={end} and coin=\"{coin}\""
-                               " GROUP BY date_norm".format(
-                                    period=period,start=start,end=end,coin=coin))
-                    elif feature == "low":
-                        sql = ("SELECT date_norm, MIN(low)" +
-                                " FROM (SELECT date+{period}-(date%{period})"
-                                " AS date_norm, low, coin FROM History)"
-                                " WHERE date_norm>={start} and date_norm<={end} and coin=\"{coin}\""
-                                " GROUP BY date_norm".format(
-                                    period=period,start=start,end=end,coin=coin))
-                    else:
-                        msg = ("The feature %s is not supported" % feature)
-                        logging.error(msg)
-                        raise ValueError(msg)
-                    serial_data = pd.read_sql_query(sql, con=connection,
-                                                    parse_dates=["date_norm"],
-                                                    index_col="date_norm")
-                    panel.loc[feature, coin, serial_data.index] = serial_data.squeeze()
-                    panel = panel_fillna(panel, "both")
-        finally:
-            connection.commit()
-            connection.close()
+        #try:
+        for row_number, coin in enumerate(coins):
+            for feature in features:
+                # NOTE: transform the start date to end date
+                if feature == "close":
+                    sql = ("SELECT date+300 AS date_norm, close FROM History WHERE"
+                           " date_norm>={start} and date_norm<={end}" 
+                           " and date_norm%{period}=0 and coin=\"{coin}\"".format(
+                           start=start, end=end, period=period, coin=coin))
+                elif feature == "open":
+                    sql = ("SELECT date+{period} AS date_norm, open FROM History WHERE"
+                           " date_norm>={start} and date_norm<={end}" 
+                           " and date_norm%{period}=0 and coin=\"{coin}\"".format(
+                           start=start, end=end, period=period, coin=coin))
+                elif feature == "volume":
+                    sql = ("SELECT date_norm, SUM(volume)"+
+                           " FROM (SELECT date+{period}-(date%{period}) "
+                           "AS date_norm, volume, coin FROM History)"
+                           " WHERE date_norm>={start} and date_norm<={end} and coin=\"{coin}\""
+                           " GROUP BY date_norm".format(
+                                period=period,start=start,end=end,coin=coin))
+                elif feature == "high":
+                    sql = ("SELECT date_norm, MAX(high)" +
+                           " FROM (SELECT date+{period}-(date%{period})"
+                           " AS date_norm, high, coin FROM History)"
+                           " WHERE date_norm>={start} and date_norm<={end} and coin=\"{coin}\""
+                           " GROUP BY date_norm".format(
+                                period=period,start=start,end=end,coin=coin))
+                elif feature == "low":
+                    sql = ("SELECT date_norm, MIN(low)" +
+                            " FROM (SELECT date+{period}-(date%{period})"
+                            " AS date_norm, low, coin FROM History)"
+                            " WHERE date_norm>={start} and date_norm<={end} and coin=\"{coin}\""
+                            " GROUP BY date_norm".format(
+                                period=period,start=start,end=end,coin=coin))
+                else:
+                    msg = ("The feature %s is not supported" % feature)
+                    logging.error(msg)
+                    raise ValueError(msg)
+                serial_data = pd.read_sql_query(sql, con=connection,
+                                                parse_dates=["date_norm"],
+                                                index_col="date_norm")
+                panel.loc[feature, coin, serial_data.index] = serial_data.squeeze()
+                panel = panel_fillna(panel, "both")
+        #finally:
+        #    connection.commit()
+        #    connection.close()
         return panel
 
     # select top coin_number of coins by volume from start to end
     def select_coins(self, start, end):
+        '''
+        选择货币
+        '''
         if not self._online:
             logging.info("select coins offline from %s to %s" % (datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M'),
                                                                     datetime.fromtimestamp(end).strftime('%Y-%m-%d %H:%M')))

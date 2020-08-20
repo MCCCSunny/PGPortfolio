@@ -4,7 +4,7 @@ import tensorflow as tf
 import numpy as np
 from pgportfolio.constants import *
 import pgportfolio.learn.network as network
-
+import pdb
 class NNAgent:
     def __init__(self, config, restore_dir=None, device="cpu"):
         self.__config = config
@@ -88,6 +88,7 @@ class NNAgent:
         self.__net.session.close()
 
     def __set_loss_function(self):
+        # 定义的损失函数，模型的优化目标
         def loss_function4():
             return -tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output[:] * self.__future_price,
                                                         reduction_indices=[1])))
@@ -108,6 +109,8 @@ class NNAgent:
                                           -tf.reduce_sum(tf.abs(self.__net.output[:, 1:] - self.__net.previous_w)
                                                          *self.__commission_ratio, reduction_indices=[1])))
 
+        #print (self.__net.output.shape,'===============================>output') #(?,12)
+        #print (self.__future_price,'=============================>future_price') #(?,12)
         loss_function = loss_function5
         if self.__config["training"]["loss_function"] == "loss_function4":
             loss_function = loss_function4
@@ -170,7 +173,8 @@ class NNAgent:
                                                     self.__y: y,
                                                     self.__net.previous_w: last_w,
                                                     self.__net.input_num: x.shape[0]})
-        setw(results[-1][:, 1:])
+        setw(results[-1][:, 1:]) #(109,11) 传入datamatrice中的setw函数中，也就是把
+        pdb.set_trace()
         return results[:-1]
 
     # save the variables path including file name
