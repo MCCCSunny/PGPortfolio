@@ -8,23 +8,26 @@ import pdb
 class NNAgent:
     def __init__(self, config, restore_dir=None, device="cpu"):
         self.__config = config
-        self.__coin_number = config["input"]["coin_number"] #币种的个数
-        self.__net = network.CNN(config["input"]["feature_number"],
-                                 self.__coin_number,
+        self.__stock_number = len(config["stockList"]) #币种的个数
+        self.__feature_number = len(config["features"])
+        self.__net = network.CNN(self.__feature_number,
+                                 self.__stock_number,
                                  config["input"]["window_size"],
                                  config["layers"],
                                  device=device) #定义CNN网络
         self.__global_step = tf.Variable(0, trainable=False)
         self.__train_operation = None
-        self.__y = tf.placeholder(tf.float32, shape=[None, self.__config["input"]["feature_number"], self.__coin_number]) 
+        self.__y = tf.placeholder(tf.float32, shape=[None, self.__feature_number, self.__stock_number])
         #__y: (None, 3, 11)
-        self.__future_price = tf.concat([tf.ones([self.__net.input_num, 1]), self.__y[:, 0, :]], 1)
+        self.__future_price = tf.concat([tf.ones([self.__net.input_num, 1]), self.__y[:, 0, :]], 1) # (?,12)
+        print ('=============future_price===============',self.__future_price)
         self.__future_omega = (self.__future_price * self.__net.output) /\
-                              tf.reduce_sum(self.__future_price * self.__net.output, axis=1)[:, None]
+                              tf.reduce_sum(self.__future_price * self.__net.output, axis=1)[:, None] # (?,12)
+        #print ('=============__future_omega===============',self.__future_omega) 
+        #print ('============self.__net.output=============',self.__net.output)  output.shape (?,12)              
         # tf.assert_equal(tf.reduce_sum(self.__future_omega, axis=1), tf.constant(1.0))
         self.__commission_ratio = self.__config["trading"]["trading_consumption"] #交易手续费的设定
-        self.__pv_vector = tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1]) *\
-                           (tf.concat([tf.ones(1), self.__pure_pc()], axis=0))
+        self.__pv_vector = tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1]) * (tf.concat([tf.ones(1), self.__pure_pc()], axis=0))
         self.__log_mean_free = tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1])))
         self.__portfolio_value = tf.reduce_prod(self.__pv_vector) #张量元素的乘积
         self.__mean = tf.reduce_mean(self.__pv_vector)
@@ -155,26 +158,27 @@ class NNAgent:
 
     def evaluate_tensors(self, x, y, last_w, setw, tensors):
         """
-        :param x:
-        :param y:
-        :param last_w:
+        :param x: (109,4,3,31)
+        :param y: (109,4,3)
+        :param last_w: (109,3)
         :param setw: a function, pass the output w to it to fill the PVM
         :param tensors:
         :return:
         """
         tensors = list(tensors)
         tensors.append(self.__net.output)
+        # 第一个是优化操作， 第二个是softmax输出
         assert not np.any(np.isnan(x))
         assert not np.any(np.isnan(y))
         assert not np.any(np.isnan(last_w)),\
             "the last_w is {}".format(last_w)
-        results = self.__net.session.run(tensors,
-                                         feed_dict={self.__net.input_tensor: x,
-                                                    self.__y: y,
-                                                    self.__net.previous_w: last_w,
-                                                    self.__net.input_num: x.shape[0]})
-        setw(results[-1][:, 1:]) #(109,11) 传入datamatrice中的setw函数中，也就是把
-        pdb.set_trace()
+        results = self.__net.session.run(tensors, feed_dict={self.__net.input_tensor: x,
+                                                             self.__y: y,
+                                                             self.__net.previous_w: last_w,
+                                                             self.__net.input_num: x.shape[0]})
+        # results 为（梯度，变量）
+        # 第二个输出量为权重值
+        setw(results[-1][:, 1:]) #(109,股票的个数) 传入datamatrice中的setw函数中，也就是把生成的权重矩阵传入到数据中
         return results[:-1]
 
     # save the variables path including file name
@@ -182,27 +186,11 @@ class NNAgent:
         self.__saver.save(self.__net.session, path)
 
     # consumption vector (on each periods)
-    def __pure_pc(self):
+    def __pure_pc(self): # 文章中的16式
         c = self.__commission_ratio
         w_t = self.__future_omega[:self.__net.input_num-1]  # rebalanced
         w_t1 = self.__net.output[1:self.__net.input_num]
         mu = 1 - tf.reduce_sum(tf.abs(w_t1[:, 1:]-w_t[:, 1:]), axis=1)*c
-        """
-        mu = 1-3*c+c**2
-
-        def recurse(mu0):
-            factor1 = 1/(1 - c*w_t1[:, 0])
-            if isinstance(mu0, float):
-                mu0 = mu0
-            else:
-                mu0 = mu0[:, None]
-            factor2 = 1 - c*w_t[:, 0] - (2*c - c**2)*tf.reduce_sum(
-                tf.nn.relu(w_t[:, 1:] - mu0 * w_t1[:, 1:]), axis=1)
-            return factor1*factor2
-
-        for i in range(20):
-            mu = recurse(mu)
-        """
         return mu
 
     # the history is a 3d matrix, return a asset vector

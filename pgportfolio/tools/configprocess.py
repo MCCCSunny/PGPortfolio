@@ -102,10 +102,10 @@ def load_config(index=None):
     """
     # 读取配置文件
     if index:
-        with open(rootpath+"/train_package/" + str(index) + "/net_config.json") as file:
+        with open(rootpath+"\\train_package\\" + str(index) + "\\net_config.json") as file:
             config = json.load(file)
     else:
-        with open(rootpath+"/pgportfolio/" + "net_config.json") as file:
+        with open(rootpath+"\\pgportfolio\\" + "net_config.json") as file:
             config = json.load(file)
     return preprocess_config(config)
 

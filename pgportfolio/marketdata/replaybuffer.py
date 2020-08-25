@@ -1,16 +1,16 @@
 from __future__ import division,absolute_import,print_function
 import numpy as np
 import logging
-
+import pdb
 
 class ReplayBuffer:
-    def __init__(self, start_index, end_index, batch_size, is_permed, coin_number, sample_bias=1.0):
+    def __init__(self, start_index, end_index, batch_size, is_permed, stock_number, sample_bias=1.0):
         """
         :param start_index: start index of the training set on the global data matrices
         :param end_index: end index of the training set on the global data matrices
         """
-        self.__coin_number = coin_number
-        self.__experiences = [Experience(i) for i in range(start_index, end_index)]
+        self.__stock_number = stock_number
+        self.__experiences = [Experience(i) for i in range(start_index, end_index)] #定义state_index
         self.__is_permed = is_permed
         # NOTE: in order to achieve the previous w feature
         self.__batch_size = batch_size
@@ -27,7 +27,7 @@ class ReplayBuffer:
         @:param bias: value in (0, 1)
         """
         # TODO: deal with the case when bias is 0
-        ran = np.random.geometric(bias)
+        ran = np.random.geometric(bias) #随机数
         while ran > end - start:
             ran = np.random.geometric(bias)
         result = end - ran
@@ -36,6 +36,7 @@ class ReplayBuffer:
     def next_experience_batch(self):
         # First get a start point randomly
         batch = []
+        #print (len(self.__experiences),'=====================') # 3321
         if self.__is_permed:
             for i in range(self.__batch_size):
                 batch.append(self.__experiences[self.__sample(self.__experiences[0].state_index,
@@ -44,7 +45,7 @@ class ReplayBuffer:
         else:
             batch_start = self.__sample(0, len(self.__experiences) - self.__batch_size,
                                         self.__sample_bias)
-            batch = self.__experiences[batch_start:batch_start+self.__batch_size]
+            batch = self.__experiences[batch_start:batch_start+self.__batch_size] #随机选择一个样本 109
         return batch
 
 

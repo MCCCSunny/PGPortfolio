@@ -7,10 +7,11 @@ from argparse import ArgumentParser
 from datetime import datetime
 
 from pgportfolio.tools.configprocess import preprocess_config
-from pgportfolio.tools.configprocess import load_config
 from pgportfolio.tools.trade import save_test_data
 from pgportfolio.tools.shortcut import execute_backtest
 from pgportfolio.resultprocess import plot
+from pgportfolio.tools.configprocess import load_config
+from pgportfolio.learn.tradertrainer import TraderTrainer
 import pdb
 
 def build_parser():
@@ -43,22 +44,34 @@ def build_parser():
     return parser
 
 
-def main():
+def main(logPath, dir_id, device):
     parser = build_parser()
     options = parser.parse_args()
-    if not os.path.exists("./" + "train_package"):
-        os.makedirs("./" + "train_package")
     if not os.path.exists("./" + "database"):
         os.makedirs("./" + "database")
     options.mode = 'train'
     options.folder = '5'
     if options.mode == "train": #训练数据
-        import pgportfolio.autotrain.training
         if not options.algo:
-            pgportfolio.autotrain.training.train_all(int(options.processes), options.device) #训练智能体
+            save_path = logPath + dir_id + "/netfile"
+            # 读取配置文件            
+            with open(logPath+dir_id+"\\net_config.json") as file:
+                config_json = json.load(file)
+            config = preprocess_config(config_json)
+            log_file_dir = logPath + dir_id + "/tensorboard"
+            # 定义错误等级
+            logfile_level = logging.DEBUG
+            console_level = logging.INFO
+            logging.basicConfig(filename=log_file_dir.replace("tensorboard","programlog"), level=logfile_level)
+            console = logging.StreamHandler()
+            console.setLevel(console_level)
+            logging.getLogger().addHandler(console)
+            trainer = TraderTrainer(config, save_path=save_path, device=device) #初始化训练器
+            trainer.train_net(log_file_dir=log_file_dir, index=dir_id) #训练网络    
         else:
             for folder in options.folder:
                 raise NotImplementedError()
+
     # 生成配置文件到路径中，要想修改配置，直接修改PGPortfolio\pgportfolio\net_config.json
     elif options.mode == "generate":
         import pgportfolio.autotrain.generate as generate
@@ -132,4 +145,7 @@ def _config_by_algo(algo):
     return config
 
 if __name__ == "__main__":
-    main()
+    logPath = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\'
+    dir_id = '5'
+    device = 'cpu'
+    main(logPath, dir_id, device)

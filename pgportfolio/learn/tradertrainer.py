@@ -48,16 +48,15 @@ class TraderTrainer:
         np.random.seed(config["random_seed"])
 
         self.__window_size = self.input_config["window_size"]
-        self.__coin_number = self.input_config["coin_number"]
         self.__batch_size = self.train_config["batch_size"]
         self.__snap_shot = self.train_config["snap_shot"]
         config["input"]["fake_data"] = fake_data
         
         self._matrix = DataMatrices.create_from_config(config) #数据 
         self.test_set = self._matrix.get_test_set() #测试集 dict：{'X', 'y', 'last_w', 'setw'}
+        # X: (260, 4, 3, 31), y: (260, 4, 3), last_w: (260, 3)
         if not config["training"]["fast_train"]:
             self.training_set = self._matrix.get_training_set() #训练集
-            pdb.set_trace()
         self.upperbound_validation = 1
         self.upperbound_test = 1
         tf.set_random_seed(self.config["random_seed"])
@@ -81,6 +80,8 @@ class TraderTrainer:
             raise ValueError()
         result = self._agent.evaluate_tensors(feed["X"],feed["y"],last_w=feed["last_w"],
                                               setw=feed["setw"], tensors=tensors)
+        # len: 6, result[5]: (260,4)
+        # 计算的是tensors的值，有几个tensor就相应的有几个输出
         return result
 
     @staticmethod
@@ -103,7 +104,6 @@ class TraderTrainer:
                            self._agent.log_mean_free,
                            self._agent.portfolio_weights)
         self.test_writer.add_summary(summary, step)
-
         if not fast_train:
             summary, loss_value = self._evaluate("training", self.summary, self._agent.loss)
             self.train_writer.add_summary(summary, step)
@@ -200,14 +200,14 @@ class TraderTrainer:
             self._agent.recycle() #
             best_agent = NNAgent(self.config, restore_dir=self.save_path)
             self._agent = best_agent
-
+            
         pv, log_mean = self._evaluate("test", self._agent.portfolio_value, self._agent.log_mean) #最后在评估一下
         #logging.warning('the portfolio value train No.%s is %s log_mean is %s,'
         #                ' the training time is %d seconds' % (index, pv, log_mean, time.time() - starttime))
+        
+        return self.__log_result_csv(index, time.time() - starttime, self.save_path)
 
-        return self.__log_result_csv(index, time.time() - starttime)
-
-    def __log_result_csv(self, index, time):
+    def __log_result_csv(self, index, time, path):
         from pgportfolio.trade import backtest
         dataframe = None
         csv_dir = './train_package/train_summary.csv'
@@ -218,6 +218,7 @@ class TraderTrainer:
 
         backtest = backtest.BackTest(self.config.copy(),
                                      net_dir=None,
+                                     result_path = path, 
                                      agent=self._agent)
 
         backtest.start_trading()

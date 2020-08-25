@@ -32,61 +32,7 @@ def train_one(save_path, config, log_file_dir, index, logfile_level, console_lev
     else:    
         print ('log_file_dir is not existent')
     print("training at %s started" % index)
+    pdb.set_trace()
     trainer = TraderTrainer(config, save_path=save_path, device=device) #初始化训练器
     return trainer.train_net(log_file_dir=log_file_dir, index=index) #训练网络
 
-def train_all(processes=1, device="cpu"):
-    """
-    train all the agents in the train_package folders
-
-    :param processes: the number of the processes. If equal to 1, the logging level is debug
-                      at file and info at console. If greater than 1, the logging level is
-                      info at file and warming at console.
-    """
-    if processes == 1:
-        console_level = logging.INFO
-        logfile_level = logging.DEBUG
-    else:
-        console_level = logging.WARNING
-        logfile_level = logging.INFO
-    train_dir = "train_package"
-    if not os.path.exists("./" + train_dir): #if the directory does not exist, creates one
-        os.makedirs("./" + train_dir)
-    all_subdir = os.listdir("./" + train_dir)
-    all_subdir.sort()
-    pool = []
-    for dir in all_subdir:
-        # train only if the log dir does not exist
-        if not str.isdigit(dir): #判断是不是文件路径
-            return
-        # NOTE: logfile is for compatibility reason
-        # tensorboard 不存在 或者 logfile存在时，进行训练
-        if not (os.path.isdir("./"+train_dir+"/"+dir+"/tensorboard") or os.path.isdir("./"+train_dir+"/"+dir+"/logfile")):
-            # 开始训练
-            train_one("./" + train_dir + "/" + dir + "/netfile", load_config(dir),
-                      "./" + train_dir + "/" + dir + "/tensorboard",dir, logfile_level, console_level, device)
-            '''
-            p = Process(target=train_one, args=(
-                "./" + train_dir + "/" + dir + "/netfile",
-                load_config(dir),
-                "./" + train_dir + "/" + dir + "/tensorboard",
-                dir, logfile_level, console_level, device)) #训练每一个模型 TraderTrainer
-            p.start()
-            pool.append(p)
-            '''
-        else:
-            continue
-
-        # suspend if the processes are too many
-        '''
-        wait = True
-        while wait:
-            time.sleep(5)
-            for p in pool:
-                alive = p.is_alive()
-                if not alive:
-                    pool.remove(p)
-            if len(pool)<processes:
-                wait = False
-      '''
-    print("All the Tasks are Over")

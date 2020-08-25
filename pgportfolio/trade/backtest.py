@@ -7,9 +7,9 @@ from pgportfolio.tools.trade import calculate_pv_after_commission
 import pdb
 
 class BackTest(trader.Trader):
-    def __init__(self, config, net_dir=None, agent=None, agent_type="nn"):
-        trader.Trader.__init__(self, 0, config, 0, net_dir,
-                               initial_BTC=1, agent=agent, agent_type=agent_type)
+    def __init__(self, config, net_dir=None, result_path=None, agent=None, agent_type="nn"):
+        trader.Trader.__init__(self, 0, config, 0, net_dir, result_path,
+                               initial_cash=100000, agent=agent, agent_type=agent_type)
         if agent_type == "nn":
             data_matrices = self._rolling_trainer.data_matrices
         elif agent_type == "traditional":
@@ -19,9 +19,11 @@ class BackTest(trader.Trader):
             raise ValueError()
         self.__test_set = data_matrices.get_test_set()
         self.__test_length = self.__test_set["X"].shape[0] #测试集的长度
+        self.__test_date = data_matrices.get_test_date()
         self._total_steps = self.__test_length
         self.__test_pv = 1.0
         self.__test_pc_vector = []
+        self._window_size = config["input"]["window_size"]
         
     @property
     def test_pv(self):
@@ -52,7 +54,7 @@ class BackTest(trader.Trader):
         pass
 
     def __get_matrix_X(self):
-        return self.__test_set["X"][self._steps]
+        return self._steps, self.__test_set["X"][self._steps]
 
     def __get_matrix_y(self):
         return self.__test_set["y"][self._steps, 0, :]
@@ -61,11 +63,12 @@ class BackTest(trader.Trader):
         self._rolling_trainer.rolling_train()
 
     def generate_history_matrix(self):
-        inputs = self.__get_matrix_X()
+        steps_, inputs = self.__get_matrix_X()
+        date = self.__test_date[steps_+self._window_size+1]
         if self._agent_type == "traditional":
             inputs = np.concatenate([np.ones([1, 1, inputs.shape[2]]), inputs], axis=1)
             inputs = inputs[:, :, 1:] / inputs[:, :, :-1]
-        return inputs
+        return steps_, inputs, date
 
     def trade_by_strategy(self, omega):
         '''
