@@ -168,4 +168,3 @@ class CNN(NeuralNetWork):
 
 def allint(l):
     return [int(i) for i in l]
-

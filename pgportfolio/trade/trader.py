@@ -7,7 +7,8 @@ import time
 import pdb
 
 class Trader:
-    def __init__(self, waiting_period, config, total_steps, net_dir, result_path, agent=None, initial_cash=100000, agent_type="nn"):
+    def __init__(self, waiting_period, config, stockList, featureList, start_date, end_date, fake_data, 
+                total_steps, net_dir, result_path, agent=None, initial_cash=100000, agent_type="nn"):
         """
         @:param agent_type: string, could be nn or traditional
         @:param agent: the traditional agent object, if the agent_type is traditional
@@ -22,8 +23,9 @@ class Trader:
             config["input"]["norm_method"] = "relative"
             self._norm_method = "relative"
         elif agent_type == "nn":
-            self._rolling_trainer = RollingTrainer(config, net_dir, agent=agent)
-            self._stock_list = config["stockList"]
+            self._rolling_trainer = RollingTrainer(config, stockList, featureList, start_date, end_date, fake_data, 
+                                                    restore_dir=net_dir, save_path=result_path, agent=agent)
+            self._stock_list = stockList
             self._norm_method = config["input"]["norm_method"]
             if not agent:
                 agent = self._rolling_trainer.agent
@@ -34,7 +36,7 @@ class Trader:
         # the total assets is calculated with BTC
         self._total_capital = initial_cash
         self._window_size = config["input"]["window_size"]
-        self._stock_number = len(config["stockList"])
+        self._stock_number = len(stockList)
         self._commission_rate = config["trading"]["trading_consumption"]
         self._fake_ratio = config["input"]["fake_ratio"]
         self._asset_vector = np.zeros(self._stock_number+1)

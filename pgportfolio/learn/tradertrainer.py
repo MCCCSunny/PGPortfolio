@@ -29,7 +29,7 @@ Result = collections.namedtuple("Result",
                                  "training_time"])
 
 class TraderTrainer:
-    def __init__(self, config, fake_data=False, restore_dir=None, save_path=None, device="cpu",
+    def __init__(self, config, stockList, featureList, start_date, end_date, fake_data=False, restore_dir=None, save_path=None, device="cpu",
                  agent=None):
         """
         :param config: config dictionary
@@ -52,7 +52,13 @@ class TraderTrainer:
         self.__snap_shot = self.train_config["snap_shot"]
         config["input"]["fake_data"] = fake_data
         
-        self._matrix = DataMatrices.create_from_config(config) #数据 
+        self.stockList = stockList
+        self.featureList = featureList
+        self.start_date = start_date
+        self.end_date = end_date
+        self.fake_data = fake_data
+
+        self._matrix = DataMatrices.create_from_config(config, stockList, featureList, start_date, end_date) #数据 
         self.test_set = self._matrix.get_test_set() #测试集 dict：{'X', 'y', 'last_w', 'setw'}
         # X: (260, 4, 3, 31), y: (260, 4, 3), last_w: (260, 3)
         if not config["training"]["fast_train"]:
@@ -67,9 +73,9 @@ class TraderTrainer:
             if device == "cpu":
                 os.environ["CUDA_VISIBLE_DEVICES"] = ""
                 with tf.device("/cpu:0"):
-                    self._agent = NNAgent(config, restore_dir, device)
+                    self._agent = NNAgent(config, stockList, featureList, restore_dir, device)
             else:
-                self._agent = NNAgent(config, restore_dir, device)
+                self._agent = NNAgent(config, stockList, featureList, restore_dir, device)
 
     def _evaluate(self, set_name, *tensors):
         if set_name == "test":
@@ -187,23 +193,25 @@ class TraderTrainer:
             x, y, last_w, setw = self.next_batch() #获取batch x:(109, 3, 11, 31) y:(109, 3, 11) last_w: (109,11) setw:function
             finish_data = time.time()
             total_data_time += (finish_data - step_start)
-            self._agent.train(x, y, last_w=last_w, setw=setw) #训练智能体
+            #训练智能体
+            self._agent.train(x, y, last_w=last_w, setw=setw) 
             total_training_time += time.time() - finish_data
             if i % 50 == 0 and log_file_dir:
                 logging.info("average time for data accessing is %s"%(total_data_time/50))
                 logging.info("average time for training is %s"%(total_training_time/50))
                 total_training_time = 0
                 total_data_time = 0
-                self.log_between_steps(i) #每隔固定的步数对测试集进行评估
+                #每隔固定的步数对测试集进行评估
+                self.log_between_steps(i) 
 
         if self.save_path:
             self._agent.recycle() #
-            best_agent = NNAgent(self.config, restore_dir=self.save_path)
+            best_agent = NNAgent(self.config, self.stockList, self.featureList, restore_dir=self.save_path)
             self._agent = best_agent
             
         pv, log_mean = self._evaluate("test", self._agent.portfolio_value, self._agent.log_mean) #最后在评估一下
         #logging.warning('the portfolio value train No.%s is %s log_mean is %s,'
-        #                ' the training time is %d seconds' % (index, pv, log_mean, time.time() - starttime))
+        # ' the training time is %d seconds' % (index, pv, log_mean, time.time() - starttime))
         
         return self.__log_result_csv(index, time.time() - starttime, self.save_path)
 
@@ -216,10 +224,8 @@ class TraderTrainer:
                                                            self._agent.log_mean, self._agent.pv_vector,\
                                                            self._agent.log_mean_free)
 
-        backtest = backtest.BackTest(self.config.copy(),
-                                     net_dir=None,
-                                     result_path = path, 
-                                     agent=self._agent)
+        backtest = backtest.BackTest(self.config.copy(), self.stockList, self.featureList, self.start_date, self.end_date,
+                                     self.fake_data, net_dir=None, result_path = path, agent=self._agent)
 
         backtest.start_trading()
         result = Result(test_pv=[v_pv],

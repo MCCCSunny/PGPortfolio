@@ -7,11 +7,11 @@ import tflearn
 
 
 class RollingTrainer(TraderTrainer):
-    def __init__(self, config, restore_dir=None, save_path=None, agent=None, device="cpu"):
+    def __init__(self, config, stockList, featureList, start_date, end_date, fake_data, restore_dir=None, save_path=None, agent=None, device="cpu"):
         config["training"]["buffer_biased"] = config["trading"]["buffer_biased"]
         config["training"]["learning_rate"] = config["trading"]["learning_rate"]
-        TraderTrainer.__init__(self, config, restore_dir=restore_dir, save_path=save_path,
-                               agent=agent, device=device)
+        TraderTrainer.__init__(self, config, stockList, featureList, start_date, end_date, fake_data, 
+                                restore_dir=restore_dir, save_path=save_path, agent=agent, device=device)
 
     @property
     def agent(self):

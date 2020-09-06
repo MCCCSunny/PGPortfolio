@@ -3,14 +3,14 @@ import tflearn
 import tensorflow as tf
 import numpy as np
 from pgportfolio.constants import *
-import pgportfolio.learn.network as network
+import pgportfolio.learn.network_cap as network_cap
 import pdb
 class NNAgent:
-    def __init__(self, config, restore_dir=None, device="cpu"):
+    def __init__(self, config, stockList, featureList, restore_dir=None, device="cpu"):
         self.__config = config
-        self.__stock_number = len(config["stockList"]) #币种的个数
-        self.__feature_number = len(config["features"])
-        self.__net = network.CNN(self.__feature_number,
+        self.__stock_number = len(stockList) #币种的个数
+        self.__feature_number = len(featureList)
+        self.__net = network_cap.CNN(self.__feature_number,
                                  self.__stock_number,
                                  config["input"]["window_size"],
                                  config["layers"],
@@ -34,7 +34,7 @@ class NNAgent:
         self.__log_mean = tf.reduce_mean(tf.log(self.__pv_vector))
         self.__standard_deviation = tf.sqrt(tf.reduce_mean((self.__pv_vector - self.__mean) ** 2))
         self.__sharp_ratio = (self.__mean - 1) / self.__standard_deviation
-        self.__loss = self.__set_loss_function() #定义损失函数
+        self.__loss = self.__set_loss_function() #定义损失函数 关键！！！
         self.__train_operation = self.init_train(learning_rate=self.__config["training"]["learning_rate"],
                                                  decay_steps=self.__config["training"]["decay_steps"],
                                                  decay_rate=self.__config["training"]["decay_rate"],
@@ -97,6 +97,7 @@ class NNAgent:
                                                         reduction_indices=[1])))
 
         def loss_function5():
+            # 最大化权重乘以价格后的值，也就是总资产值
             return -tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1]))) + \
                    LAMBDA * tf.reduce_mean(tf.reduce_sum(-tf.log(1 + 1e-6 - self.__net.output), reduction_indices=[1]))
 

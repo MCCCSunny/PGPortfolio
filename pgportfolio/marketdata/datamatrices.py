@@ -78,19 +78,15 @@ class DataMatrices:
         return self.__PVM
 
     @staticmethod
-    def create_from_config(config):
+    def create_from_config(config, stockList, features, start, end):
         """main method to create the DataMatrices in this project
         @:param config: config dictionary
         @:return: a DataMatrices object
         """
         config = config.copy()
         dbName = config["dbName"]
-        stockList  = config['stockList']
-        features = config['features']
         
         input_config = config["input"]
-        start = parse_time(input_config["start_date"])
-        end = parse_time(input_config["end_date"])
         volume_average_days=input_config["volume_average_days"]
         window_size=input_config["window_size"]
         test_portion=input_config["test_portion"]

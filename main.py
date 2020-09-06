@@ -23,6 +23,10 @@ def build_parser():
     parser.add_argument("--processes", dest="processes",
                         help="number of processes you want to start to train the network",
                         default="1")
+    parser.add_argument("--stockList", type=str, nargs='+')
+    parser.add_argument("--featureList", type=str, nargs="+")
+    parser.add_argument("--start_date", type=str,default='2005/01/01')
+    parser.add_argument("--end_date",type=str, default='2019/12/31')
     parser.add_argument("--repeat", dest="repeat",
                         help="repeat times of generating training subfolder",
                         default="1")
@@ -44,21 +48,20 @@ def build_parser():
     return parser
 
 
-def main(logPath, dir_id, device):
+def main(logPath, device):
     parser = build_parser()
     options = parser.parse_args()
     if not os.path.exists("./" + "database"):
         os.makedirs("./" + "database")
-    options.mode = 'train'
-    options.folder = '5'
+    #options.repeat = 1
     if options.mode == "train": #训练数据
         if not options.algo:
-            save_path = logPath + dir_id + "/netfile"
+            save_path = logPath + str(options.folder) + "/netfile"
             # 读取配置文件            
-            with open(logPath+dir_id+"\\net_config.json") as file:
+            with open(logPath+str(options.folder)+"\\net_config.json") as file:
                 config_json = json.load(file)
             config = preprocess_config(config_json)
-            log_file_dir = logPath + dir_id + "/tensorboard"
+            log_file_dir = logPath + str(options.folder) + "/tensorboard"
             # 定义错误等级
             logfile_level = logging.DEBUG
             console_level = logging.INFO
@@ -66,8 +69,8 @@ def main(logPath, dir_id, device):
             console = logging.StreamHandler()
             console.setLevel(console_level)
             logging.getLogger().addHandler(console)
-            trainer = TraderTrainer(config, save_path=save_path, device=device) #初始化训练器
-            trainer.train_net(log_file_dir=log_file_dir, index=dir_id) #训练网络    
+            trainer = TraderTrainer(config, options.stockList, options.featureList, options.start_date, options.end_date, save_path=save_path, device=device) #初始化训练器
+            trainer.train_net(log_file_dir=log_file_dir, index=str(options.folder)) #训练网络    
         else:
             for folder in options.folder:
                 raise NotImplementedError()
@@ -76,22 +79,23 @@ def main(logPath, dir_id, device):
     elif options.mode == "generate":
         import pgportfolio.autotrain.generate as generate
         logging.basicConfig(level=logging.INFO)
+        config_ = load_config()
         generate.add_packages(load_config(), int(options.repeat))
     elif options.mode == "download_data":
         from pgportfolio.marketdata.datamatrices import DataMatrices
         with open("./pgportfolio/net_config.json") as file:
             config = json.load(file)
         config = preprocess_config(config)
-        start = time.mktime(datetime.strptime(config["input"]["start_date"], "%Y/%m/%d").timetuple())
-        end = time.mktime(datetime.strptime(config["input"]["end_date"], "%Y/%m/%d").timetuple())
+        start = time.mktime(datetime.strptime(options.start_date, "%Y/%m/%d").timetuple())
+        end = time.mktime(datetime.strptime(options.end_date, "%Y/%m/%d").timetuple())
         DataMatrices(start=start,
                      end=end,
-                     feature_number=config["input"]["feature_number"],
+                     feature_number=len(options.featureList),
                      window_size=config["input"]["window_size"],
                      online=True,
                      period=config["input"]["global_period"],
                      volume_average_days=config["input"]["volume_average_days"],
-                     coin_filter=config["input"]["coin_number"],
+                     coin_filter=len(options["stockList"]),
                      is_permed=config["input"]["is_permed"],
                      test_portion=config["input"]["test_portion"],
                      portion_reversed=config["input"]["portion_reversed"])
@@ -146,6 +150,5 @@ def _config_by_algo(algo):
 
 if __name__ == "__main__":
     logPath = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\'
-    dir_id = '5'
     device = 'cpu'
-    main(logPath, dir_id, device)
+    main(logPath, device)

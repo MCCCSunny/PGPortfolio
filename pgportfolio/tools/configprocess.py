@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import json
 import os
+import pdb
 rootpath = os.path.dirname(os.path.abspath(__file__)).\
     replace("\\pgportfolio\\tools", "").replace("/pgportfolio/tools","")
 
@@ -39,7 +40,7 @@ def fill_input_default(input_config):
     # 填充参数值
     set_missing(input_config, "save_memory_mode", False) 
     set_missing(input_config, "portion_reversed", False)
-    set_missing(input_config, "market", "poloniex")
+    set_missing(input_config, "market", "stock")
     set_missing(input_config, "norm_method", "absolute")
     set_missing(input_config, "is_permed", False)
     set_missing(input_config, "fake_ratio", 1)
@@ -69,6 +70,8 @@ def fill_layers_default(layers):
             set_missing(layer, "regularizer", None)
             set_missing(layer, "weight_decay", 0.0)
         elif layer["type"] == "DropOut":
+            pass
+        elif layer["type"] == "capsule_layer":
             pass
         else:
             raise ValueError("layer name {} not supported".format(layer["type"]))
