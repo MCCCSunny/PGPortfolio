@@ -10,7 +10,7 @@ class NNAgent:
         self.__config = config
         self.__stock_number = len(stockList) #币种的个数
         self.__feature_number = len(featureList)
-        self.__net = network_cap.CNN(self.__feature_number,
+        self.__net = network_cap.CNN_cap(self.__feature_number,
                                  self.__stock_number,
                                  config["input"]["window_size"],
                                  config["layers"],

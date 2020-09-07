@@ -18,7 +18,7 @@ class NeuralNetWork:
             tf_config.gpu_options.per_process_gpu_memory_fraction = 0.2
         self.input_num = tf.placeholder(tf.int32, shape=[])
         #print (self.input_num.shape,'================================')
-        self.input_tensor = tf.placeholder(tf.float32, shape=[None, feature_number, rows, columns])
+        self.input_tensor = tf.placeholder(tf.float32, shape=[None, feature_number, rows, columns]) # (?,4,5,31)
         self.previous_w = tf.placeholder(tf.float32, shape=[None, rows])
         self._rows = rows
         self._columns = columns
@@ -32,7 +32,7 @@ class NeuralNetWork:
         pass
 
 
-class CNN(NeuralNetWork):
+class CNN_cap(NeuralNetWork):
     # input_shape (features, rows, columns)
     def __init__(self, feature_number, rows, columns, layers, device):
         NeuralNetWork.__init__(self, feature_number, rows, columns, layers, device)
@@ -43,9 +43,10 @@ class CNN(NeuralNetWork):
 
     # grenrate the operation, the forward computaion
     def _build_network(self, layers):
-        network = tf.transpose(self.input_tensor, [0, 2, 3, 1])
+        network = tf.transpose(self.input_tensor, [0, 2, 3, 1]) #(?,5,31,4)
         # [batch, assets, window, features]
-        network = network / network[:, :, -1, 0, None, None] #用最近一个时刻的价格数据进行正则化
+        network = network / network[:, :, -1, 0, None, None] #用最近一个时刻的收盘价数据进行正则化，收盘价应该为最后一列
+        # (?,5,31,4)
         for layer_number, layer in enumerate(layers):
             if layer["type"] == "DenseLayer":
                 network = tflearn.layers.core.fully_connected(network,
@@ -60,14 +61,14 @@ class CNN(NeuralNetWork):
 
             elif layer["type"] == "EIIE_Dense":
                 #print (layer,'===========================')
-                width = network.get_shape()[2]
+                width = network.get_shape()[2] # 16
                 network = tflearn.layers.conv_2d(network, int(layer["filter_number"]),
                                                  [1, width],
                                                  [1, 1],
                                                  "valid",
                                                  layer["activation_function"],
                                                  regularizer=layer["regularizer"],
-                                                 weight_decay=layer["weight_decay"])
+                                                 weight_decay=layer["weight_decay"]) #(?,5,1,10)
                 self.add_layer_to_dict(layer["type"], network)
                 # (?, 960, 1, 10)
             elif layer["type"] == "ConvLayer":
@@ -110,29 +111,24 @@ class CNN(NeuralNetWork):
                 width = network.get_shape()[2]
                 height = network.get_shape()[1]
                 features = network.get_shape()[3]
-                network = tf.reshape(network, [self.input_num, int(height), 1, int(width*features)])
+                network = tf.reshape(network, [self.input_num, int(height), 1, int(width*features)]) #(?,5,1,10)
                 #print (self.previous_w,'==============previous_w============')
-                #pdb.set_trace() (?, 960, 1, 10)
-                w = tf.reshape(self.previous_w, [-1, int(height), 1, 1])
-                network = tf.concat([network, w], axis=3)
-                #pdb.set_trace() (?, 960, 1, 11)
+                w = tf.reshape(self.previous_w, [-1, int(height), 1, 1]) # (?, 5, 1, 1)
+                network = tf.concat([network, w], axis=3) # (?, 5, 1, 11)
                 network = tflearn.layers.conv_2d(network, 1, [1, 1], padding="valid",
                                                  regularizer=layer["regularizer"],
-                                                 weight_decay=layer["weight_decay"])
+                                                 weight_decay=layer["weight_decay"]) #(?,5,1,1)
                 
                 self.add_layer_to_dict(layer["type"], network)
-                network = network[:, :, 0, 0]
-                # (?,960)
+                network = network[:, :, 0, 0] #(?,5)
                 #btc_bias = tf.zeros((self.input_num, 1))
                 cash_bias = tf.get_variable("cash_bias", [1, 1], dtype=tf.float32,
-                                       initializer=tf.zeros_initializer)
-                # self.add_layer_to_dict(layer["type"], network, weights=False)
+                                       initializer=tf.zeros_initializer) #(?,1)
                 cash_bias = tf.tile(cash_bias, [self.input_num, 1])
-                network = tf.concat([cash_bias, network], 1) # (?,961)
+                network = tf.concat([cash_bias, network], 1) # (?,6)
                 self.voting = network
                 self.add_layer_to_dict('voting', network, weights=False)
-                network = tflearn.layers.core.activation(network, activation="softmax")
-                # (?,961)
+                network = tflearn.layers.core.activation(network, activation="softmax") # (?,6)
                 self.add_layer_to_dict('softmax_layer', network, weights=False)
 
             elif layer["type"] == "EIIE_LSTM" or\
@@ -164,8 +160,12 @@ class CNN(NeuralNetWork):
                 # Primary Capsules layer, return tensor with shape [batch_size, 1152, 8, 1]  
                 primaryCaps = CapsLayer(num_outputs=int(layer["filter_number"]), vec_len=int(layer["vec_len"]), 
                                         with_routing=layer["with_routing"], layer_type=layer["layer_type"])
-                network = primaryCaps(network, kernel_size=int(layer["filter_size"]), stride=int(layer["strides"]))
-                self.add_layer_to_dict('capsule_CNN', network)
+                network_caps = primaryCaps(network, kernel_size=int(layer["filter_size"]), stride=int(layer["strides"]))
+                self.add_layer_to_dict('capsule_CNN', network_caps)
+
+                digitCaps = CapsLayer(num_outputs=self._rows, vec_len=int(layer["vec_len_fc"]), with_routing=True, layer_type='FC')
+                network = digitCaps(network_caps)  #(?,5,16,1)
+                self.add_layer_to_dict("capsule_FC", network)
                 # (?, 960, 8, 1)
             else:
                 raise ValueError("the layer {} not supported.".format(layer["type"]))

@@ -225,7 +225,7 @@ class TraderTrainer:
                                                            self._agent.log_mean_free)
 
         backtest = backtest.BackTest(self.config.copy(), self.stockList, self.featureList, self.start_date, self.end_date,
-                                     self.fake_data, net_dir=None, result_path = path, agent=self._agent)
+                                     self.fake_data, net_dir=None, result_path = path, agent=self._agent) # 回测
 
         backtest.start_trading()
         result = Result(test_pv=[v_pv],
