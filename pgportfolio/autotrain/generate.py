@@ -5,8 +5,8 @@ import logging
 from os import path
 import pdb
 
-def add_packages(config, repeat=1):
-    train_dir = "train_package"
+def add_packages(train_dir, config, repeat=1):
+    #train_dir = "train_package"
     # print (path.realpath(__file__)) #当前文件的路径
     package_dir = path.realpath(__file__).replace('pgportfolio/autotrain/generate.pyc',train_dir)\
         .replace("pgportfolio\\autotrain\\generate.pyc", train_dir)\

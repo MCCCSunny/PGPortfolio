@@ -80,7 +80,8 @@ def main(logPath, device):
         import pgportfolio.autotrain.generate as generate
         logging.basicConfig(level=logging.INFO)
         config_ = load_config()
-        generate.add_packages(load_config(), int(options.repeat))
+        train_dir = logPath
+        generate.add_packages(train_dir, load_config(), int(options.repeat))
     elif options.mode == "download_data":
         from pgportfolio.marketdata.datamatrices import DataMatrices
         with open("./pgportfolio/net_config.json") as file:
@@ -149,6 +150,7 @@ def _config_by_algo(algo):
     return config
 
 if __name__ == "__main__":
-    logPath = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\'
+    logPath = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\CNN_capsule_EIIE\\'
+    #logPath = 'train_package\\CNN_capsule_EIIE'
     device = 'cpu'
     main(logPath, device)

@@ -81,6 +81,7 @@ class CNN_cap(NeuralNetWork):
                                                  regularizer=layer["regularizer"],
                                                  weight_decay=layer["weight_decay"])
                 self.add_layer_to_dict(layer["type"], network)
+                
             elif layer["type"] == "MaxPooling":
                 network = tflearn.layers.conv.max_pool_2d(network, layer["strides"])
             elif layer["type"] == "AveragePooling":
