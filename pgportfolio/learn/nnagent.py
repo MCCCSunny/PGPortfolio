@@ -6,7 +6,7 @@ from pgportfolio.constants import *
 import pgportfolio.learn.network_cap as network_cap
 import pdb
 class NNAgent:
-    def __init__(self, config, stockList, featureList, restore_dir=None, device="cpu"):
+    def __init__(self, config, stockList, featureList, lambda_=None, restore_dir=None, device="cpu"):
         self.__config = config
         self.__stock_number = len(stockList) #币种的个数
         self.__feature_number = len(featureList)
@@ -27,13 +27,14 @@ class NNAgent:
         #print ('============self.__net.output=============',self.__net.output)  output.shape (?,12)              
         # tf.assert_equal(tf.reduce_sum(self.__future_omega, axis=1), tf.constant(1.0))
         self.__commission_ratio = self.__config["trading"]["trading_consumption"] #交易手续费的设定
-        self.__pv_vector = tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1]) * (tf.concat([tf.ones(1), self.__pure_pc()], axis=0))
+        self.__pv_vector = tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1]) * (tf.concat([tf.ones(1), self.__pure_pc()], axis=0)) #(?,)
         self.__log_mean_free = tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output * self.__future_price, reduction_indices=[1])))
         self.__portfolio_value = tf.reduce_prod(self.__pv_vector) #张量元素的乘积
         self.__mean = tf.reduce_mean(self.__pv_vector)
         self.__log_mean = tf.reduce_mean(tf.log(self.__pv_vector))
         self.__standard_deviation = tf.sqrt(tf.reduce_mean((self.__pv_vector - self.__mean) ** 2))
         self.__sharp_ratio = (self.__mean - 1) / self.__standard_deviation
+        self.lambda_ = lambda_
         self.__loss = self.__set_loss_function() #定义损失函数 关键！！！
         self.__train_operation = self.init_train(learning_rate=self.__config["training"]["learning_rate"],
                                                  decay_steps=self.__config["training"]["decay_steps"],
@@ -102,11 +103,20 @@ class NNAgent:
                    LAMBDA * tf.reduce_mean(tf.reduce_sum(-tf.log(1 + 1e-6 - self.__net.output), reduction_indices=[1]))
 
         def loss_function6():
-            return -tf.reduce_mean(tf.log(self.pv_vector))
+            return -tf.reduce_mean(tf.log(self.pv_vector)) #最大化收益
 
         def loss_function7():
             return -tf.reduce_mean(tf.log(self.pv_vector)) + \
                    LAMBDA * tf.reduce_mean(tf.reduce_sum(-tf.log(1 + 1e-6 - self.__net.output), reduction_indices=[1]))
+
+        def loss_function8():
+            '''
+            HMM_trend： 代表股票的趋势，如果为上涨，则为1；下降，则为-1；平，则为0。
+            即当上涨时，最小化最后一项，让各个股票之前的权重更为集中，也就是投资在更有潜力的股票上；
+            当整个趋势为上升时，最大化最后一项，让哥哥股票之间的权重更为平均，也就是分散化投资
+            '''
+            return -tf.reduce_mean(tf.log(self.pv_vector)) + \
+                   self.lambda_ * HMM_trend * tf.reduce_mean(tf.reduce_sum(tf.log(1 + 1e-6 - self.__net.output), reduction_indices=[1]))
 
         def with_last_w():
             return -tf.reduce_mean(tf.log(tf.reduce_sum(self.__net.output[:] * self.__future_price, reduction_indices=[1])
@@ -173,13 +183,14 @@ class NNAgent:
         assert not np.any(np.isnan(y))
         assert not np.any(np.isnan(last_w)),\
             "the last_w is {}".format(last_w)
-        results = self.__net.session.run(tensors, feed_dict={self.__net.input_tensor: x,
+        results, loss_value = self.__net.session.run([tensors,self.__loss], feed_dict={self.__net.input_tensor: x,
                                                              self.__y: y,
                                                              self.__net.previous_w: last_w,
                                                              self.__net.input_num: x.shape[0]})
         # results 为（梯度，变量）
         # 第二个输出量为权重值
         setw(results[-1][:, 1:]) #(109,股票的个数) 传入datamatrice中的setw函数中，也就是把生成的权重矩阵传入到数据中
+        pdb.set_trace()
         return results[:-1]
 
     # save the variables path including file name
