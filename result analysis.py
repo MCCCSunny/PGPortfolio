@@ -6,20 +6,20 @@ from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 db = client["JointQuant"]
 
-path='E:\\code\\portfolio\\PGPortfolio\\train_package\\'
+path='F:\\study\\ml\\code\\PGPortfolio\\train_package\\CNN_capsule_EIIE\\'
 dir_ = os.listdir(path)
 
 for onefile in dir_:
     if onefile.isnumeric():
         try:
-            df0 = pd.DataFrame([[None, 100000]], columns=['omega','total_capital'])
+            df0 = pd.DataFrame([[None, 1000000]], columns=['omega','total_capital'])
             df = pd.read_csv(path+onefile+'\\netfile_backtest_df.csv')
             df = df.set_index('date')
             df = df[['omega', 'total_capital']]
             df = pd.concat([df0, df])
             final_asset_value = df.iloc[-1]['total_capital']
             # 利润
-            profit = final_asset_value - 1e5            
+            profit = final_asset_value - df.iloc[0]['total_capital']          
             # 夏普率
             SR = qs.stats.sharpe(df['total_capital'])
             # MDD
