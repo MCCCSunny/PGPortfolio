@@ -5,7 +5,6 @@ from __future__ import print_function
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 
-from pgportfolio.marketdata.coinlist import CoinList
 import numpy as np
 import pandas as pd
 from pgportfolio.tools.data import panel_fillna
@@ -26,7 +25,7 @@ class HistoryManager:
         dateSet = set()
         for stockName in self.stockList:
             df = pd.DataFrame(list(db[stockName].find().sort('date')))
-            df = df.set_index('date')
+            df = df.set_index('date').loc[start:end]
             dateSet = dateSet.union(list(df.index))
         dateSet = sorted(list(dateSet))
   
@@ -34,6 +33,7 @@ class HistoryManager:
         for row_number, stockName in enumerate(self.stockList):
             df = pd.DataFrame(list(db[stockName].find().sort('date')))[features+['date']]
             df = df.set_index('date')
+            df = df.loc[start:end]
             for feature in features:
                 panel.loc[feature, stockName, df.index] = df[feature].squeeze()
                 panel = panel_fillna(panel, 'both')

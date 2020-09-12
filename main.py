@@ -152,5 +152,5 @@ def _config_by_algo(algo):
 if __name__ == "__main__":
     logPath = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\CNN_capsule_EIIE\\'
     #logPath = 'train_package\\CNN_capsule_EIIE'
-    device = 'cpu'
+    device = 'gpu'
     main(logPath, device)

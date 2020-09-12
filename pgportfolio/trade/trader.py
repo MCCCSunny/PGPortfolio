@@ -8,7 +8,7 @@ import pdb
 
 class Trader:
     def __init__(self, waiting_period, config, stockList, featureList, start_date, end_date, fake_data, 
-                total_steps, net_dir, result_path, agent=None, initial_cash=100000, agent_type="nn"):
+                total_steps, net_dir, result_path, agent=None, initial_cash=1000000, agent_type="nn"):
         """
         @:param agent_type: string, could be nn or traditional
         @:param agent: the traditional agent object, if the agent_type is traditional
