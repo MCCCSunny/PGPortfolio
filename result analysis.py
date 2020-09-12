@@ -6,7 +6,7 @@ from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 db = client["JointQuant"]
 
-path='F:\\study\\ml\\code\\PGPortfolio\\train_package\\CNN_capsule_EIIE\\'
+path='F:\\study\\ml\\code\\PGPortfolio\\train_package\\EIIE_CNN\\'
 dir_ = os.listdir(path)
 
 for onefile in dir_:

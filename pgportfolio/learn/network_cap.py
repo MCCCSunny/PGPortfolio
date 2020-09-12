@@ -75,7 +75,7 @@ class CNN_cap(NeuralNetWork):
                 #print (layer,'=============ConvLayer')
                 network = tflearn.layers.conv_2d(network, int(layer["filter_number"]),
                                                  allint(layer["filter_shape"]),
-                                                 int(layer["strides"]),
+                                                 allint(layer["strides"]),
                                                  layer["padding"],
                                                  layer["activation_function"],
                                                  regularizer=layer["regularizer"],
@@ -174,5 +174,8 @@ class CNN_cap(NeuralNetWork):
 
 
 def allint(l):
-    return [int(i) for i in l]
+    if type(l) == list:
+        return [int(i) for i in l]
+    else:
+        return int(l)
 
