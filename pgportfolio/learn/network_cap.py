@@ -141,19 +141,20 @@ class CNN_cap(NeuralNetWork):
                     if i > 0:
                         reuse = True
                     if layer["type"] == "EIIE_LSTM":
-                        result = tflearn.layers.lstm(network[:, :, :, i],
+                        result = tflearn.layers.recurrent.lstm(network[:, :, :, i],
                                                      int(layer["neuron_number"]),
-                                                     dropout=layer["dropouts"],
+                                                     #dropout=layer["dropouts"],
                                                      scope="lstm"+str(layer_number),
                                                      reuse=reuse)
                     else:
-                        result = tflearn.layers.simple_rnn(network[:, :, :, i],
+                        result = tflearn.layers.recurrent.simple_rnn(network[:, :, :, i],
                                                            int(layer["neuron_number"]),
-                                                           dropout=layer["dropouts"],
+                                                           #dropout=layer["dropouts"],
                                                            scope="rnn"+str(layer_number),
                                                            reuse=reuse)
                     resultlist.append(result)
-                network = tf.stack(resultlist)
+                
+                network = tf.stack(resultlist) # (5,?,20)
                 network = tf.transpose(network, [1, 0, 2])
                 network = tf.reshape(network, [-1, self._rows, 1, int(layer["neuron_number"])])
 
