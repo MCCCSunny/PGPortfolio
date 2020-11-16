@@ -150,7 +150,7 @@ def _config_by_algo(algo):
     return config
 
 if __name__ == "__main__":
-    logPath = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\LSTM_EIIE\\'
+    logPath = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\GRU_EIIE\\'
     #logPath = 'train_package\\CNN_capsule_EIIE'
     device = 'cpu'
     main(logPath, device)
