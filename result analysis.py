@@ -19,7 +19,7 @@ for onefile in dir_:
             df = pd.concat([df0, df])
             final_asset_value = df.iloc[-1]['total_capital']
             # 利润
-            profit = final_asset_value - df.iloc[0]['total_capital']          
+            profit = final_asset_value - df.iloc[0]['total_capital']
             # 夏普率
             SR = qs.stats.sharpe(df['total_capital'])
             # MDD

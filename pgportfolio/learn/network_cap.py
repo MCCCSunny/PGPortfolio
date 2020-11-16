@@ -133,7 +133,7 @@ class CNN_cap(NeuralNetWork):
                 self.add_layer_to_dict('softmax_layer', network, weights=False)
 
             elif layer["type"] == "EIIE_LSTM" or\
-                            layer["type"] == "EIIE_RNN":
+                            layer["type"] == "EIIE_RNN" or layer["type"] == 'EIIE_GRU':
                 network = tf.transpose(network, [0, 2, 3, 1])
                 resultlist = []
                 reuse = False
@@ -146,11 +146,17 @@ class CNN_cap(NeuralNetWork):
                                                      #dropout=layer["dropouts"],
                                                      scope="lstm"+str(layer_number),
                                                      reuse=reuse)
-                    else:
+                    elif layer["type"] == "EIIE_RNN":
                         result = tflearn.layers.recurrent.simple_rnn(network[:, :, :, i],
                                                            int(layer["neuron_number"]),
                                                            #dropout=layer["dropouts"],
                                                            scope="rnn"+str(layer_number),
+                                                           reuse=reuse)
+                    elif layer["type"] == "EIIE_GRU":
+                        result = tflearn.layers.gru(network[:, :, :, i],
+                                                           int(layer["neuron_number"]),
+                                                           #dropout=layer["dropouts"],
+                                                           scope="gru"+str(layer_number),
                                                            reuse=reuse)
                     resultlist.append(result)
                 
