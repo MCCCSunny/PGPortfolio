@@ -6,7 +6,7 @@ from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 db = client["JointQuant"]
 
-path='F:\\study\\ml\\code\\PGPortfolio_loss_trend\\train_package\\capsule_EIIE\\'
+path='E:\\code\\portfolio\\PGPortfolio\\train_package\\LSTM_EIIE\\'
 dir_ = os.listdir(path)
 
 for onefile in dir_:
@@ -19,7 +19,7 @@ for onefile in dir_:
             df = pd.concat([df0, df])
             final_asset_value = df.iloc[-1]['total_capital']
             # 利润
-            profit = final_asset_value - df.iloc[0]['total_capital']          
+            profit = final_asset_value - df.iloc[0]['total_capital']
             # 夏普率
             SR = qs.stats.sharpe(df['total_capital'])
             # MDD
