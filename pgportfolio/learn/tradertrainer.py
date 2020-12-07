@@ -60,6 +60,7 @@ class TraderTrainer:
 
         self._matrix = DataMatrices.create_from_config(config, stockList, featureList, start_date, end_date) #数据 
         self.test_set = self._matrix.get_test_set() #测试集 dict：{'X', 'y', 'last_w', 'setw'}
+        pdb.set_trace()
         # X: (260, 4, 3, 31), y: (260, 4, 3), last_w: (260, 3)
         if not config["training"]["fast_train"]:
             self.training_set = self._matrix.get_training_set() #训练集

@@ -170,7 +170,6 @@ class CNN_cap(NeuralNetWork):
                                         with_routing=layer["with_routing"], layer_type=layer["layer_type"])
                 network_caps = primaryCaps(network, kernel_size=int(layer["filter_size"]), stride=int(layer["strides"]))
                 self.add_layer_to_dict('capsule_CNN', network_caps)
-
                 digitCaps = CapsLayer(num_outputs=self._rows, vec_len=int(layer["vec_len_fc"]), with_routing=True, layer_type='FC')
                 network = digitCaps(network_caps)  #(?,5,16,1)
                 self.add_layer_to_dict("capsule_FC", network)
