@@ -62,6 +62,7 @@ class TraderTrainer:
         self.test_set = self._matrix.get_test_set() #测试集 dict：{'X', 'y', 'last_w', 'setw'}
         pdb.set_trace()
         # X: (260, 4, 3, 31), y: (260, 4, 3), last_w: (260, 3)
+        # X: (test_length, feature_num, stock_num, time_windows)
         if not config["training"]["fast_train"]:
             self.training_set = self._matrix.get_training_set() #训练集
         self.upperbound_validation = 1
