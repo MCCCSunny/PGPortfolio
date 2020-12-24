@@ -69,6 +69,8 @@ def fill_layers_default(layers):
                 layer["type"] == "EIIE_Output_WithW":
             set_missing(layer, "regularizer", None)
             set_missing(layer, "weight_decay", 0.0)
+        elif layer["type"] == "EI3":
+            pass
         elif layer["type"] == "DropOut":
             pass
         elif layer["type"] == "capsule_layer":

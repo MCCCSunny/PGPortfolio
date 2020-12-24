@@ -19,10 +19,10 @@ class NNAgent:
         self.__train_operation = None
         self.__y = tf.placeholder(tf.float32, shape=[None, self.__feature_number, self.__stock_number])
         #__y: (None, 3, 11)
-        self.__future_price = tf.concat([tf.ones([self.__net.input_num, 1]), self.__y[:, 0, :]], 1) # (?,12)
+        self.__future_price = tf.concat([tf.ones([self.__net.input_num, 1]), self.__y[:, 0, :]], 1) # (?,12) 1和收盘价，文章中的公式1
         print ('=============future_price===============',self.__future_price)
         self.__future_omega = (self.__future_price * self.__net.output) /\
-                              tf.reduce_sum(self.__future_price * self.__net.output, axis=1)[:, None] # (?,12)
+                              tf.reduce_sum(self.__future_price * self.__net.output, axis=1)[:, None] # (?,12) #公式7
         #print ('=============__future_omega===============',self.__future_omega) 
         #print ('============self.__net.output=============',self.__net.output)  output.shape (?,12)              
         # tf.assert_equal(tf.reduce_sum(self.__future_omega, axis=1), tf.constant(1.0))

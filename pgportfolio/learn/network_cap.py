@@ -7,6 +7,7 @@ import tensorflow as tf
 import tflearn
 from pgportfolio.tools.capsLayer import CapsLayer
 import pdb
+import numpy as np
 
 class NeuralNetWork:
     def __init__(self, feature_number, rows, columns, layers, device):
@@ -71,6 +72,35 @@ class CNN_cap(NeuralNetWork):
                                                  weight_decay=layer["weight_decay"]) #(?,5,1,10)
                 self.add_layer_to_dict(layer["type"], network)
                 # (?, 960, 1, 10)
+            elif layer["type"] == "EI3":
+                """
+                paper: A Multi-Scale Temporal Feature Aggregation Convolutional Neural Network for Portfolio Management
+                """
+                # short feature
+                network = tf.transpose(network, [0, 3, 2, 1]) #(?, feature_num, window_size, asset_num)
+                filter_num = int(self.input_tensor.shape[2])
+                feature1 = tflearn.layers.conv_2d(network, filter_num, [1,3], [1,1], "valid", "relu", bias=True, weights_init="Xavier", bias_init="Xavier")
+                feature11 = tflearn.layers.conv_2d(feature1, filter_num, [1, 48], [1,1], "valid", "relu", bias=True, weights_init="Xavier", bias_init="Xavier")               
+                # medium feature
+                feature2 = tflearn.layers.conv_2d(network, filter_num, [1,21], [1,1], "valid", "relu", bias=True, weights_init="Xavier", bias_init="Xavier")
+                feature21 = tflearn.layers.conv_2d(feature2, filter_num, [1,30], [1,1], "valid", "relu", bias=True, weights_init="Xavier", bias_init="Xavier")
+                # maxpooling提取特征
+                feature3 = tflearn.layers.conv.max_pool_2d(network, [1, 50], [1,1], "valid")
+                # concate
+                feature = tf.concat([feature11, feature21], 1)
+                feature = tf.concat([feature, feature3], 1)
+                # concate with the previous weight
+                self.previous_w1 = self.previous_w[:, None, None, :]
+                feature = tf.concat([feature, self.previous_w1], 1)
+                # 1*1 conv layer
+                feature = tflearn.layers.conv_2d(feature, filter_num, [10,1], [1,1], "valid", "relu", bias=True, weights_init="Xavier", bias_init="Xavier")
+                feature_sq = tf.squeeze(feature, [1,2])
+                # add cash 
+                cash_bias = tf.ones((self.input_num, 1))
+                feature_all = tf.concat([feature_sq, cash_bias], 1)
+                network = tflearn.layers.core.activation(feature_all, activation="softmax")
+                self.add_layer_to_dict('softmax_layer', network, weights=False)
+
             elif layer["type"] == "ConvLayer":
                 #print (layer,'=============ConvLayer')
                 network = tflearn.layers.conv_2d(network, int(layer["filter_number"]),

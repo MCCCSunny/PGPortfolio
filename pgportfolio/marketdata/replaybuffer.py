@@ -45,7 +45,7 @@ class ReplayBuffer:
         else:
             batch_start = self.__sample(0, len(self.__experiences) - self.__batch_size,
                                         self.__sample_bias)
-            batch = self.__experiences[batch_start:batch_start+self.__batch_size] #随机选择一个样本 109
+            batch = self.__experiences[batch_start:batch_start+self.__batch_size] #随机选择一个样本,样本中是有次序的 109
         return batch
 
 

@@ -11,7 +11,7 @@ db = client["JointQuant"]
 stockDict = {'1':  ["600000", "002032", "600498", "000768", "600221"], 
              '11': ["600519", "000858", "000661", "001914", "000651"],
              '21': ["600030", "600703", "600050", "600837", "600031"]}
-stockList = ["600000", "002032", "600498", "000768", "600221"]
+stockList = ["600887", "600873", "600597", "600186", "600073"]
 start = '2019-01-04'
 end = '2019-12-31'
 df_all = pd.DataFrame(columns=stockList)
@@ -25,15 +25,14 @@ df_scaled = preprocessing.scale(df_all1.values)
 df_new = pd.DataFrame(columns = df_all1.keys().tolist(), index=df_all1.index.tolist())
 for i in range(df_scaled.shape[1]):
     df_new[stockList[i]] = df_scaled[:,i]
-df_new.to_excel('E:\\code\\portfolio\\PGPortfolio\\result_analysis\\'+'set1.xlsx')
+df_new.to_excel('E:\\code\\portfolio\\PGPortfolio\\result_analysis\\'+'set71.xlsx')
 '''
 for i in range(df_scaled.shape[1]):
     plt.plot(df_scaled[:,i], label=stockList[i])
 plt.legend(loc='best')
 '''
 w_names = ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9', 'w10']
-#path= 'E:\\code\\portfolio\\PGPortfolio\\train_package\\GRU_EIIE\\1\\'
-path = 'E:\\code\\portfolio\\PGPortfolio_trend\\train_package\\LSTM_EIIE_loss_trend\\1\\'
+path = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\CNN_EIIE\\71\\'
 df_w = pd.read_csv(path+'netfile_backtest_df.csv')
 df_w = df_w.set_index('date')[['omega', 'total_capital']]
 df_w_all = pd.DataFrame(index=df_w.index, columns=w_names[:len(stockList)+1])
@@ -47,13 +46,13 @@ for i in range(len(df_w)):
         except:
             pass
     df_w_all.iloc[i]=w_str1
-df_w_all = df_w_all.iloc[:,:len(stockList)]
+df_w_all = df_w_all.iloc[:,:len(stockList)+1]
+df_w_all['total_capital']=df_w['total_capital']
 df_w_all.to_excel(path+"weight.xlsx")
 
 
-path_loss_trend = 'E:\\code\\portfolio\\PGPortfolio_trend\\train_package\\LSTM_EIIE_loss_trend\\1\\'
-#path_loss_trend = 'E:\\code\\portfolio\\PGPortfolio\\train_package\\LSTM_EIIE\\1\\'
-df_w = pd.read_csv(path+'netfile_backtest_df.csv')
+path_loss_trend = 'E:\\code\\portfolio\\PGPortfolio_trend\\train_package\\CNN_EIIE_loss_trend\\71\\'
+df_w = pd.read_csv(path_loss_trend+'netfile_backtest_df.csv')
 df_w = df_w.set_index('date')[['omega', 'total_capital']]
 df_w_all = pd.DataFrame(index=df_w.index, columns=w_names[:len(stockList)+1])
 for i in range(len(df_w)):
@@ -66,7 +65,8 @@ for i in range(len(df_w)):
         except:
             pass
     df_w_all.iloc[i]=w_str1
-df_w_all = df_w_all.iloc[:,:len(stockList)]
+df_w_all = df_w_all.iloc[:,:len(stockList)+1]
+df_w_all['total_capital']=df_w['total_capital']
 df_w_all.to_excel(path_loss_trend+"weight.xlsx")
 
 '''

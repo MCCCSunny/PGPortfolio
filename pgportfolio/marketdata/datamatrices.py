@@ -157,7 +157,9 @@ class DataMatrices:
             self.__PVM.iloc[indexs, :] = w
         M = [self.get_submatrix(index) for index in indexs]
         M = np.array(M) #(195,3,11,32)
-        X = M[:, :, :, :-1] #(195,1,11,31)
+        # X = M[:, :, :, :-1] #(195,1,11,31)
+        # 如果对价格序列用收盘价进行正则化的话 应该是
+        X = M[:, :, :, :-1]/M[:, 0, None, :, -2, None]
         y = M[:, :, :, -1] / M[:, 0, None, :, -2] # (195,3,11)
         return {"X": X, "y": y, "last_w": last_w, "setw": setw}
 

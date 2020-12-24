@@ -60,7 +60,6 @@ class TraderTrainer:
 
         self._matrix = DataMatrices.create_from_config(config, stockList, featureList, start_date, end_date) #数据 
         self.test_set = self._matrix.get_test_set() #测试集 dict：{'X', 'y', 'last_w', 'setw'}
-        pdb.set_trace()
         # X: (260, 4, 3, 31), y: (260, 4, 3), last_w: (260, 3)
         # X: (test_length, feature_num, stock_num, time_windows)
         if not config["training"]["fast_train"]:
@@ -193,6 +192,10 @@ class TraderTrainer:
         for i in range(self.train_config["steps"]): #训练步数
             step_start = time.time()
             x, y, last_w, setw = self.next_batch() #获取batch x:(109, 3, 11, 31) y:(109, 3, 11) last_w: (109,11) setw:function
+            if 'noise' in self.train_config:
+                if self.train_config['noise']:
+                    noise = np.random.normal(0,0.002,size=y.shape)
+                    y = y + noise
             finish_data = time.time()
             total_data_time += (finish_data - step_start)
             #训练智能体

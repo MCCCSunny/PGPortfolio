@@ -7,7 +7,7 @@ client = MongoClient('localhost', 27017)
 db = client["JointQuant"]
 
 
-path='E:\\code\\portfolio\\PGPortfolio_trend\\train_package\\GRU_EIIE_loss_trend\\'
+path='E:\\code\\portfolio\\PGPortfolio\\train_package\\APG\\'
 dir_ = os.listdir(path)
 
 for onefile in dir_:
